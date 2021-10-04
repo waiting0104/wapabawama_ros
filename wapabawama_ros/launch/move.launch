@@ -1,0 +1,23 @@
+<launch>
+
+  <!-- Pabawama_ros -->
+  <!-- Set Map Frame -->
+  <include file="$(find wapabawama_ros)/launch/tf.launch"/>
+
+  <node name="set_command" pkg="wapabawama_ros" type="set_command" output="screen">
+    <param name="device_name" value="/dev/ttyTHS0" />
+    <param name="baud_rate" value="115200" />
+    <param name="freq" value="10" />
+    <param name="gantry_pub"        value="gantry/pose"/>
+    <param name="gantry_pub_speed"  value="gantry/speed"/>
+    <param name="la1_pub"           value="la1/pose"/>
+    <param name="la2_pub"           value="la2/pose"/>
+    <param name="la3_pub"           value="la3/pose"/>
+    <param name="gantry_sub"        value="gantry/set_speed"/>
+    <param name="la1_sub"           value="la1/set_pose"/>
+    <param name="la2_sub"           value="la2/set_pose"/>
+    <param name="la3_sub"           value="la3/set_pose"/>
+  </node>
+
+
+</launch>

@@ -1,0 +1,12 @@
+yolo_model:
+
+  config_file:
+    name: orchid.cfg
+  weight_file:
+    name: lab_orchid.weights
+  threshold:
+    value: 0.5
+  detection_classes:
+    names:
+      - pot
+      - central

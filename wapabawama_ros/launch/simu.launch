@@ -1,0 +1,105 @@
+<launch>
+  <!-- Get Images -->
+  <!-- <include file="$(find spinnaker_camera_driver)/launch/camera.launch" /> -->
+
+  <!-- Yolov4 -->
+  <!-- <include file="$(find darknet_ros)/launch/orchid.launch"> -->
+  <!--   <arg name="image" default="/camera/image_raw" /> -->
+  <!-- </include> -->
+
+  <!-- Pabawama_ros -->
+  <!-- Set Map Frame -->
+
+
+  <group ns="wapabawama_ros">
+
+    <include file="$(find wapabawama_ros)/launch/tf.launch"/>
+
+    <!-- Detect Lgv -->
+    <!-- <node name="lgv_detector" pkg="pabawama_ros" type="lgv_detector" output="screen"> -->
+    <!--   <param name="image" value="/camera/image_raw" /> -->
+    <!--   <param name="bbox" value="/darknet_ros/bounding_boxes" /> -->
+    <!-- </node> -->
+    <node name="lgv_detector" pkg="wapabawama_ros" type="lgv_detector_simu" output="screen"/>
+
+    <!-- Set Goal From LGV -->
+    <node name="follower_la1" pkg="wapabawama_ros" type="follower" output="screen">
+      <param name="path_sub_name" value="la1/path"/>
+      <param name="pose_pub_name" value="la1/set_pose"/>
+      <param name="frame_name" value="la1"/>
+      <param name="kp" value="0.1"/>
+      <param name="integrator_max" value="1"/>
+    </node>
+    <node name="follower_la2" pkg="wapabawama_ros" type="follower" output="screen">
+      <param name="path_sub_name" value="la2/path"/>
+      <param name="pose_pub_name" value="la2/set_pose"/>
+      <param name="frame_name" value="la2"/>
+      <param name="kp" value="0.1"/>
+      <param name="integrator_max" value="1"/>
+    </node>
+    <node name="follower_la3" pkg="wapabawama_ros" type="follower" output="screen">
+      <param name="path_sub_name" value="la3/path"/>
+      <param name="pose_pub_name" value="la3/set_pose"/>
+      <param name="frame_name" value="la3"/>
+      <param name="kp" value="0.1"/>
+      <param name="integrator_max" value="1"/>
+    </node>
+
+    <node name="path_planner_la1" pkg="wapabawama_ros" type="path_planner" output="screen">
+      <param name="path_name"        value="la1/path"/>
+      <param name="center_x"         value="-0.01"/>
+      <param name="max_y"            value="1"/>
+      <param name="interval"         value="0.0001"/>
+      <param name="lgv_dist_range"   value="0.1"/>
+      <param name="lgv_effect_range" value="0.1"/>
+      <param name="lgv_fusion_ratio" value="3"/>
+    </node>
+    <node name="path_planner_la2" pkg="wapabawama_ros" type="path_planner" output="screen">
+      <param name="path_name"        value="la2/path"/>
+      <param name="center_x"         value="-0.25"/>
+      <param name="max_y"            value="1"/>
+      <param name="interval"         value="0.0001"/>
+      <param name="lgv_dist_range"   value="0.1"/>
+      <param name="lgv_effect_range" value="0.1"/>
+      <param name="lgv_fusion_ratio" value="3"/>
+    </node>
+    <node name="path_planner_la3" pkg="wapabawama_ros" type="path_planner" output="screen">
+      <param name="path_name"        value="la3/path"/>
+      <param name="center_x"         value="0.22"/>
+      <param name="max_y"            value="1"/>
+      <param name="interval"         value="0.0001"/>
+      <param name="lgv_dist_range"   value="0.1"/>
+      <param name="lgv_effect_range" value="0.1"/>
+      <param name="lgv_fusion_ratio" value="3"/>
+    </node>
+
+    <!-- Interface commu with stm32 -->
+    <node name="set_command" pkg="wapabawama_ros" type="set_command_simu" output="screen">
+      <param name="gantry_pub"        value="gantry/pose"/>
+      <param name="gantry_pub_speed"  value="gantry/speed"/>
+      <param name="la1_pub"           value="la1/pose"/>
+      <param name="la2_pub"           value="la2/pose"/>
+      <param name="la3_pub"           value="la3/pose"/>
+      <param name="gantry_sub"        value="gantry/set_speed"/>
+      <param name="la1_sub"           value="la1/set_pose"/>
+      <param name="la2_sub"           value="la2/set_pose"/>
+      <param name="la3_sub"           value="la3/set_pose"/>
+    </node>
+    <!-- <node name="set_command" pkg="pabawama_ros" type="set_command" output="screen"> -->
+    <!--   <param name="device_name" value="/dev/ttyTHS0" /> -->
+    <!--   <param name="baud_rate" value="115200" /> -->
+    <!--   <param name="gantry_pub"        value="gantry/pose"/> -->
+    <!--   <param name="gantry_pub_speed"  value="gantry/speed"/> -->
+    <!--   <param name="la1_pub"           value="la1/pose"/> -->
+    <!--   <param name="la2_pub"           value="la2/pose"/> -->
+    <!--   <param name="la3_pub"           value="la3/pose"/> -->
+    <!--   <param name="gantry_sub"        value="gantry/set_speed"/> -->
+    <!--   <param name="la1_sub"           value="la1/set_pose"/> -->
+    <!--   <param name="la2_sub"           value="la2/set_pose"/> -->
+    <!--   <param name="la3_sub"           value="la3/set_pose"/> -->
+    <!-- </node> -->
+
+  </group>
+
+  <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find wapabawama_ros)/resources/rviz.rviz" />
+</launch>

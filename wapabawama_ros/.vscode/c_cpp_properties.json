@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/nvidia/waiting_ws/devel/include/**",
+                "/home/nvidia/practice_ws/devel/include/**",
+                "/opt/ros/melodic/include/**",
+                "/home/nvidia/waiting_ws/src/darknet_ros/darknet_ros/include/**",
+                "/home/nvidia/waiting_ws/src/opencv_test/include/**",
+                "/home/nvidia/waiting_ws/src/spinnaker_camera_driver/include/**",
+                "/home/nvidia/waiting_ws/src/wapabawama_ros/include/**",
+                "/usr/include/**",
+                "${workspaceFolder}/src/dsmotor/include"
+            ],
+            "name": "ROS"
+        }
+    ],
+    "version": 4
+}

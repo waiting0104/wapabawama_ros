@@ -1,0 +1,17 @@
+<launch>
+  <!-- Get Images -->
+  <include file="$(find spinnaker_camera_driver)/launch/camera.launch" />
+  
+  <!-- Yolov4 -->
+  <include file="$(find darknet_ros)/launch/orchid.launch">
+    <arg name="image" default="/camera/image_raw" />
+  </include>
+
+    <node name="lgv_detector" pkg="wapabawama_ros" type="lgv_detector_img" output="screen">
+      <param name="image" value="/camera/image_raw" />
+      <param name="bbox" value="/darknet_ros/bounding_boxes" />
+      <param name="box_expand" value="30" />
+      <param name="arrow_length" value="50" />
+    </node>
+
+</launch>

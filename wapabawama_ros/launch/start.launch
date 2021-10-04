@@ -1,0 +1,126 @@
+<launch>
+  <arg name="path_integ"         default="0.01" />
+  <arg name="effect_x_range"         default="0.1" />
+  <arg name="effect_y_range"         default="0.15" />
+  <arg name="path_x_max"         default="0.2" />
+
+  <include file="$(find wapabawama_ros)/launch/detect.launch">
+    <!-- <arg name="network_param_file" default="$(find darknet_ros)/config/lab_orchid_v4.yaml"/> -->
+  </include>
+
+  <!-- wapabawama_ros -->
+  <group ns="wapabawama_ros">
+
+    <include file="$(find wapabawama_ros)/launch/move.launch"/>
+
+    <!-- Detect Lgv -->
+    <node name="lgv_detector_left" pkg="wapabawama_ros" type="lgv_detector" output="screen">
+      <param name="image" value="/stereo/left/image_raw" />
+      <param name="bbox" value="/left_camera/darknet_ros/bounding_boxes" />
+      <param name="alpha" value="395" />
+      <param name="beta" value="1459" />
+      <param name="cx" value="1577" />
+      <param name="cy" value="425" />
+      <param name="d" value="395" />
+      <!-- <param name="biasx" value="0.05" /> -->
+      <!-- <param name="biasy" value="-0.02" /> -->
+      <!-- <param name="biasy" value="-0.07" /> -->
+      <!-- <remap from="lgvs" to="set_lgvs" /> -->
+      <param name="box_expand" value="30" />
+    </node>
+
+    <node name="lgv_detector_right" pkg="wapabawama_ros" type="lgv_detector" output="screen">
+      <param name="image" value="/stereo/right/image_raw" />
+      <param name="bbox" value="/right_camera/darknet_ros/bounding_boxes" />
+      <param name="alpha" value="395" />
+      <param name="beta" value="1457" />
+      <param name="cx" value="417" />
+      <param name="cy" value="385" />
+      <param name="d" value="395" />
+      <param name="biasx" value="0.02" />
+      <!-- <param name="biasy" value="-0.02" /> -->
+      <!-- <remap from="lgvs" to="set_lgvs" /> -->
+      <param name="box_y_limit" value="0" />
+      <param name="box_expand" value="30" />
+    </node>
+    <!-- <node name="lgv_detector" pkg="wapabawama_ros" type="lgv_detector_simu" output="screen"/> -->
+    <!-- <node name="lgv_tracker" pkg="wapabawama_ros" type="lgv_tracker" output="screen"> -->
+    <!-- </node> -->
+
+    <!-- Set Goal From LGV -->
+    <node name="follower_la1" pkg="wapabawama_ros" type="follower" output="screen">
+      <param name="path_sub_name" value="la1/path"/>
+      <param name="pose_pub_name" value="la1/set_pose"/>
+      <param name="frame_name" value="la1"/>
+      <param name="kp" value="0.05"/>
+      <param name="integrator_max" value="0"/>
+      <param name="orig" value="-0.14"/>
+    </node>
+    <node name="follower_la2" pkg="wapabawama_ros" type="follower" output="screen">
+      <param name="path_sub_name" value="la2/path"/>
+      <param name="pose_pub_name" value="la2/set_pose"/>
+      <param name="frame_name" value="la2"/>
+      <param name="kp" value="0.05"/>
+      <param name="integrator_max" value="0"/>
+      <param name="orig" value="0.10"/>
+    </node>
+    <node name="follower_la3" pkg="wapabawama_ros" type="follower" output="screen">
+      <param name="path_sub_name" value="la3/path"/>
+      <param name="pose_pub_name" value="la3/set_pose"/>
+      <param name="frame_name" value="la3"/>
+      <param name="kp" value="0.05"/>
+      <param name="integrator_max" value="0"/>
+      <param name="orig" value="-0.37"/>
+    </node>
+    <!-- <node name="valve" pkg="wapabawama_ros" type="valve" output="screen">
+    </node> -->
+    <!-- <node name="gantry_script" pkg="wapabawama_ros" type="gantry_script.py" output="screen">
+    </node> -->
+    <node name="path_planner_la1" pkg="wapabawama_ros" type="path_planner" output="screen">
+      <param name="path_name"        value="la1/path"/>
+      <param name="center_x"         value="0.01"/>
+      <param name="max_y"            value="1"/>
+      <param name="interval"         value="0.0001"/>
+      <param name="lgv_dist_range"   value="$(arg effect_x_range)"/>
+      <param name="lgv_effect_range" value="$(arg effect_y_range)"/>
+      <param name="lgv_fusion_ratio" value="$(arg path_integ)"/>
+      <param name="path_x_max"       value="$(arg path_x_max)"/>
+    </node>
+    <node name="path_planner_la2" pkg="wapabawama_ros" type="path_planner" output="screen">
+      <param name="path_name"        value="la2/path"/>
+      <param name="center_x"         value="0.25"/>
+      <param name="max_y"            value="1"/>
+      <param name="interval"         value="0.0001"/>
+      <param name="lgv_dist_range"   value="$(arg effect_x_range)"/>
+      <param name="lgv_effect_range" value="$(arg effect_y_range)"/>
+      <param name="lgv_fusion_ratio" value="$(arg path_integ)"/>
+      <param name="path_x_max"       value="$(arg path_x_max)"/>
+    </node>
+    <node name="path_planner_la3" pkg="wapabawama_ros" type="path_planner" output="screen">
+      <param name="path_name"        value="la3/path"/>
+      <param name="center_x"         value="-0.22"/>
+      <param name="max_y"            value="1"/>
+      <param name="interval"         value="0.0001"/>
+      <param name="lgv_dist_range"   value="$(arg effect_x_range)"/>
+      <param name="lgv_effect_range" value="$(arg effect_y_range)"/>
+      <param name="lgv_fusion_ratio" value="$(arg path_integ)"/>
+      <param name="path_x_max"       value="$(arg path_x_max)"/>
+    </node>
+
+    <node name="record_1" pkg="wapabawama_ros" type="record_place">
+      <param name="record_name"        value="la1/odem"/>
+      <param name="frame_name"         value="la1"/>
+    </node>
+    <node name="record_2" pkg="wapabawama_ros" type="record_place">
+      <param name="record_name"        value="la2/odem"/>
+      <param name="frame_name"         value="la2"/>
+    </node>
+    <node name="record_3" pkg="wapabawama_ros" type="record_place">
+      <param name="record_name"        value="la3/odem"/>
+      <param name="frame_name"         value="la3"/>
+    </node>
+
+  </group>
+
+  <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find wapabawama_ros)/resources/rviz.rviz" />
+</launch>

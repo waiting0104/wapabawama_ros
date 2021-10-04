@@ -1,0 +1,28 @@
+<launch>
+
+  <!-- Gantry Tf -->
+  <node name="tf_map" pkg="wapabawama_ros" type="tf_map"/>
+  <node name="tf_gantry" pkg="pabawama_ros" type="tf_gantry" output="screen">
+    <param name="gantry_name" value="gantry" />
+    <param name="header_name" value="/world" />
+  </node>
+  <node name="tf_la_1" pkg="wapabawama_ros" type="tf_la" output="screen">
+    <param name="gantry_name" value="gantry" />
+    <param name="la_name" value="la1" />
+    <param name="x_bias" value="-0.14" />
+    <param name="y_bias" value="0.14" />
+  </node>
+  <node name="tf_la_2" pkg="wapabawama_ros" type="tf_la" output="screen">
+    <param name="gantry_name" value="gantry" />
+    <param name="la_name" value="la2" />
+    <param name="x_bias" value="0.10" />
+    <param name="y_bias" value="0.04" />
+  </node>
+  <node name="tf_la_3" pkg="wapabawama_ros" type="tf_la" output="screen">
+    <param name="gantry_name" value="gantry" />
+    <param name="la_name" value="la3" />
+    <param name="x_bias" value="-0.37" />
+    <param name="y_bias" value="0.04" />
+  </node>
+
+</launch>
