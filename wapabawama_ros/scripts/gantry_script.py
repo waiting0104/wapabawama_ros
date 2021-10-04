@@ -32,7 +32,7 @@ if __name__ == '__main__':
             dt = current_time-start_time
             print(int(dt))
             if(dt>=21.0):
-                main(0.0)
+                
                 break
             else:
                 main(0.4)
