@@ -25,7 +25,7 @@
 #include <std_msgs/Bool.h>
 #include <string>
 #ifndef SIMULATION
-#include "motor.hpp"
+#include "system.hpp"
 #endif // SIMULATION
 
 #ifndef SIMULATION
@@ -203,11 +203,12 @@ int main(int argc, char **argv) {
       sys.setnPos(2, -int(la3_pos * LA_RATIO));
       sys.setGoSpeed(int(gantry_speed_cmd * GANTRY_RATIO));
 #endif // REVERSE
+      
+      /* ROS_INFO("%d %d %d", -int(la1_pos * LA_RATIO), -int(la2_pos * LA_RATIO), -int(la3_pos * LA_RATIO) ); */
       //set valve pwm
       sys.setPWM(0,valve1_pwm);
-      // sys.setPWM(1,valve2_pwm);
-      // sys.setPWM(2,valve3_pwm);  
-      /* ROS_INFO("%d %d %d", -int(la1_pos * LA_RATIO), -int(la2_pos * LA_RATIO), -int(la3_pos * LA_RATIO) ); */
+      sys.setPWM(1,valve2_pwm);
+      sys.setPWM(2,valve3_pwm);  
     }
 
 #endif // SIMULATION
@@ -215,6 +216,7 @@ int main(int argc, char **argv) {
     last_time = current_time;
     ros::spinOnce();
     loop_rate.sleep();
+    std::cout<<Flow2PWM(15.7);
   }
 
 #ifndef SIMULATION

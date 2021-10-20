@@ -3,7 +3,7 @@
 # dephilia, 2021-04-27 16:31
 #
 
-all: init builds run
+all: clean init builds run
 
 init:
 	mkdir -p build; \

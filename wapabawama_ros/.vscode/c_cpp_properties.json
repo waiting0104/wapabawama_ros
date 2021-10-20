@@ -14,7 +14,7 @@
                 "/home/nvidia/waiting_ws/src/spinnaker_camera_driver/include/**",
                 "/home/nvidia/waiting_ws/src/wapabawama_ros/include/**",
                 "/usr/include/**",
-                "${workspaceFolder}/src/dsmotor/include"
+                "${workspaceFolder}/src/system/include"
             ],
             "name": "ROS"
         }

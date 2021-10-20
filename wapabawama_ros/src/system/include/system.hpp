@@ -53,6 +53,7 @@ class System {
     int getMotorPos(int);
     double getGantrySpd(int);
     //valve function
+    int setFlow(int ,float);
     int setPWM(int ,int);
     int returnState(int);
     int closeValve();
@@ -73,6 +74,6 @@ class System {
     std::queue<std::string> tx_queue;
 
 };
-
+int Flow2PWM(float);
 
 #endif /* !MOTOR_HPP */
