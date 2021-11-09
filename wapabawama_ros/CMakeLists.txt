@@ -149,6 +149,7 @@ add_library(system
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(lgv_detector      src/lgv_detector.cpp src/lgv.cpp src/perspective.cpp)
 add_executable(lgv_detector_simu src/lgv_detector_simu.cpp src/lgv.cpp)
+add_executable(lgv_detector_cv src/lgv_detector_cv.cpp src/lgv.cpp src/perspective.cpp)
 add_executable(path_planner      src/path_planner.cpp)
 add_executable(follower          src/follower.cpp)
 add_executable(set_command       src/set_command.cpp)
@@ -159,7 +160,7 @@ add_executable(tf_la             src/tf_la.cpp)
 add_executable(tf_map            src/tf_map.cpp)
 add_executable(record_place      src/record_place.cpp)
 add_executable(valve             src/valve.cpp)
-
+add_executable(detect_water_v1   src/detect_water_v1.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -170,6 +171,7 @@ add_executable(valve             src/valve.cpp)
 ## same as for the library above
 add_dependencies(lgv_detector      ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(lgv_detector_simu ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(lgv_detector_cv ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(path_planner      ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(follower          ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(set_command       ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -180,10 +182,13 @@ add_dependencies(tf_la             ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_
 add_dependencies(tf_map            ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(record_place      ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(valve             ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(detect_water_v1   ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 # add_dependencies(pwm              ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
 target_link_libraries(lgv_detector      ${catkin_LIBRARIES})
 target_link_libraries(lgv_detector_simu ${catkin_LIBRARIES})
+target_link_libraries(lgv_detector_cv ${catkin_LIBRARIES})
 target_link_libraries(follower          ${catkin_LIBRARIES})
 target_link_libraries(path_planner      ${catkin_LIBRARIES})
 target_link_libraries(set_command       ${catkin_LIBRARIES} system)
@@ -194,10 +199,13 @@ target_link_libraries(tf_la             ${catkin_LIBRARIES})
 target_link_libraries(tf_map            ${catkin_LIBRARIES})
 target_link_libraries(record_place      ${catkin_LIBRARIES})
 target_link_libraries(valve             ${catkin_LIBRARIES})
+target_link_libraries(detect_water_v1   ${catkin_LIBRARIES})
 # target_link_libraries(pwm           ${catkin_LIBRARIES} system)
 if(OpenCV_FOUND)
     target_include_directories(lgv_detector PUBLIC ${OpenCV_INCLUDE_DIRS})
     target_link_libraries(lgv_detector ${OpenCV_LIBS})
+    target_include_directories(lgv_detector_cv PUBLIC ${OpenCV_INCLUDE_DIRS})
+    target_link_libraries(lgv_detector_cv ${OpenCV_LIBS})
 endif()
 
 #############

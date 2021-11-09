@@ -6,20 +6,19 @@
  */
 
 #include "system.hpp"
-
 /* #define V1 */
 #define V2
-#define MIN_Flowrate 0
-#define Flowrate_1V 0.39
-#define Flowrate_2V 6.26
-#define Flowrate_3V 10.45
-#define Flowrate_4V 15.31
-#define Flowrate_5V 20.28
-#define Flowrate_6V 22.85
-#define Flowrate_7V 25.95
-#define Flowrate_8V 28.40
-#define Flowrate_9V 30.14
-#define MAX_Flowrate 32.31
+#define MIN_FLOW 0
+#define FLOW_1V 0.39
+#define FLOW_2V 6.26
+#define FLOW_3V 10.45
+#define FLOW_4V 15.31
+#define FLOW_5V 20.28
+#define FLOW_6V 22.85
+#define FLOW_7V 25.95
+#define FLOW_8V 28.40
+#define FLOW_9V 30.14
+#define MAX_FLOW 32.31
 System::System(std::string _dev_name, int _bdrate) {
   this->serialPtr = &this->serial;
   this->dev_name = _dev_name;
@@ -228,29 +227,25 @@ double System::getGantrySpd(int m) {
 int System::returnState(int v){
   return this->valve[v].state;
 }
-int System::setFlow(int v, float flow){
+int System::setFlow(int v, double flow){
   int pwm;
   pwm = Flow2PWM(flow);
-  pwm = pwm < MIN_PWM ? MIN_PWM : pwm;
-  pwm = pwm > MAX_PWM ? MAX_PWM : pwm;
-  this->valve[v].pwm = pwm;
-  this->valve[v].state = 1;
-  char cmd[12];
-  snprintf(cmd, 12, "X%i V%i ", v, pwm);
-  // std::cout <<"PWM is "<<pwm<<std::endl;
-  this->tx_queue.push(std::string(cmd));
+  System::setPWM(v,pwm);
   return 0;
 }
 int System::setPWM(int v, int pwm){
   pwm = pwm < MIN_PWM ? MIN_PWM : pwm;
   pwm = pwm > MAX_PWM ? MAX_PWM : pwm;
-  this->valve[v].pwm = pwm;
-  this->valve[v].state = 1;
-  char cmd[12];
-  snprintf(cmd, 12, "X%i V%i ", v, pwm);
-  // std::cout <<"PWM is "<<pwm<<std::endl;
-  this->tx_queue.push(std::string(cmd));
-  return 0;
+  // if(this->valve[v].pwm != pwm){
+    this->valve[v].pwm = pwm;
+    this->valve[v].state = 1;
+    char cmd[12];
+    snprintf(cmd, 12, "X%i V%i ", v, pwm);
+    // std::cout <<"PWM is "<<pwm<<std::endl;
+    this->tx_queue.push(std::string(cmd));
+    return 0;
+  // }
+  
 }
 int System::closeValve(){
   char cmd[12]="Y ";
@@ -263,39 +258,39 @@ int System::closeValve(){
   this->tx_queue.push(std::string(cmd));                                          
   return 0;
 }
-int Flow2PWM(float flow){
-  flow = flow < MIN_Flowrate ? MIN_Flowrate : flow;
-  flow = flow > MAX_Flowrate ? MAX_Flowrate : flow;
-  float pwm;
-  if(flow>=MIN_Flowrate&&flow<Flowrate_1V){
-    pwm = 10-(Flowrate_1V-flow)*(10)/(Flowrate_1V-MIN_Flowrate);
+int Flow2PWM(double flow){
+  flow = flow < MIN_FLOW ? MIN_FLOW : flow;
+  flow = flow > MAX_FLOW ? MAX_FLOW : flow;
+  double pwm;
+  if(flow>=MIN_FLOW&&flow<FLOW_1V){
+    pwm = 10-(FLOW_1V-flow)*(10)/(FLOW_1V-MIN_FLOW);
   }
-  else if(flow>=Flowrate_1V&&flow<Flowrate_2V){
-    pwm = 20-(Flowrate_2V-flow)*(10)/(Flowrate_2V-Flowrate_1V);
+  else if(flow>=FLOW_1V&&flow<FLOW_2V){
+    pwm = 20-(FLOW_2V-flow)*(10)/(FLOW_2V-FLOW_1V);
   }
-  else if(flow>=Flowrate_2V&&flow<Flowrate_3V){
-    pwm = 30-(Flowrate_3V-flow)*(10)/(Flowrate_3V-Flowrate_2V);    
+  else if(flow>=FLOW_2V&&flow<FLOW_3V){
+    pwm = 30-(FLOW_3V-flow)*(10)/(FLOW_3V-FLOW_2V);    
   }
-  else if(flow>=Flowrate_3V&&flow<Flowrate_4V){
-    pwm = 40-(Flowrate_4V-flow)*(10)/(Flowrate_4V-Flowrate_3V);  
+  else if(flow>=FLOW_3V&&flow<FLOW_4V){
+    pwm = 40-(FLOW_4V-flow)*(10)/(FLOW_4V-FLOW_3V);  
   }
-  else if(flow>=Flowrate_4V&&flow<Flowrate_5V){
-    pwm = 50-(Flowrate_5V-flow)*(10)/(Flowrate_5V-Flowrate_4V); 
+  else if(flow>=FLOW_4V&&flow<FLOW_5V){
+    pwm = 50-(FLOW_5V-flow)*(10)/(FLOW_5V-FLOW_4V); 
   }
-  else if(flow>=Flowrate_5V&&flow<Flowrate_6V){
-    pwm = 60-(Flowrate_6V-flow)*(10)/(Flowrate_6V-Flowrate_5V); 
+  else if(flow>=FLOW_5V&&flow<FLOW_6V){
+    pwm = 60-(FLOW_6V-flow)*(10)/(FLOW_6V-FLOW_5V); 
   }
-  else if(flow>=Flowrate_6V&&flow<Flowrate_7V){
-    pwm = 70-(Flowrate_7V-flow)*(10)/(Flowrate_7V-Flowrate_6V); 
+  else if(flow>=FLOW_6V&&flow<FLOW_7V){
+    pwm = 70-(FLOW_7V-flow)*(10)/(FLOW_7V-FLOW_6V); 
   }
-  else if(flow>=Flowrate_7V&&flow<Flowrate_8V){
-    pwm = 80-(Flowrate_8V-flow)*(10)/(Flowrate_8V-Flowrate_7V); 
+  else if(flow>=FLOW_7V&&flow<FLOW_8V){
+    pwm = 80-(FLOW_8V-flow)*(10)/(FLOW_8V-FLOW_7V); 
   }
-  else if(flow>=Flowrate_8V&&flow<Flowrate_9V){
-    pwm = 90-(Flowrate_9V-flow)*(10)/(Flowrate_9V-Flowrate_8V); 
+  else if(flow>=FLOW_8V&&flow<FLOW_9V){
+    pwm = 90-(FLOW_9V-flow)*(10)/(FLOW_9V-FLOW_8V); 
   }
-  else if(flow>=Flowrate_9V&&flow<MAX_Flowrate){
-    pwm = 100-(MAX_Flowrate-flow)*(10)/(MAX_Flowrate-Flowrate_9V); 
+  else if(flow>=FLOW_9V&&flow<=MAX_FLOW){
+    pwm = 100-(MAX_FLOW-flow)*(10)/(MAX_FLOW-FLOW_9V); 
   }
-  return int(pwm);
+  return int(pwm+0.5);
 }

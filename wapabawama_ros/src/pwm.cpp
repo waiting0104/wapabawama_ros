@@ -11,7 +11,10 @@
 
 int main(int argc, char **argv) {
   ros::init(argc, argv, "pwm");
-  std::cout<<Flow2PWM(13.4);
+  std::cout<<Flow2PWM(14.8)<<std::endl;
+  std::cout<<Flow2PWM(21.6)<<std::endl;
+  std::cout<<Flow2PWM(51.6)<<std::endl;
+  std::cout<<Flow2PWM(41.6)<<std::endl;
   return 0; // success
 }
 

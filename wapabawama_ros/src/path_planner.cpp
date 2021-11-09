@@ -106,7 +106,7 @@ class Planner{
     auto cursor = center_cursor; // Search to positive
     while ( cursor != la_path.poses.rbegin() && cursor->pose.position.y < y_ + lgv_effect_range ) {
       /* float target_x = x_ + (cursor->pose.position.y - y_) / tan(angle_); */
-      float target_x = x_ + (cursor->pose.position.y - y_) / tan(angle_) * cos((cursor->pose.position.y - y_) / lgv_effect_range * M_PI/2);
+      float target_x = x_ + (cursor->pose.position.y - y_) / tan(angle_+M_PI/2) * cos((cursor->pose.position.y - y_) / lgv_effect_range * M_PI/2);
       cursor->pose.position.x = ( cursor->pose.position.x + target_x * lgv_fusion_ratio ) / (1 + lgv_fusion_ratio);
       cursor->pose.position.x = boost::algorithm::clamp(cursor->pose.position.x, center_x-path_x_max,center_x + path_x_max);
       /* cursor->pose.position.x = cursor->pose.position.x > path_x_max ? path_x_max : cursor->pose.position.x; */
@@ -115,7 +115,7 @@ class Planner{
     cursor = center_cursor + 1; // Search to negative
     while ( cursor != ( la_path.poses.rend() ) && cursor->pose.position.y > y_ - lgv_effect_range ) {
       /* float target_x = x_ + (cursor->pose.position.y - y_) / tan(angle_); */
-      float target_x = x_ + (cursor->pose.position.y - y_) / tan(angle_) * cos(( cursor->pose.position.y - y_) / lgv_effect_range * M_PI/2);
+      float target_x = x_ + (cursor->pose.position.y - y_) / tan(angle_+M_PI/2) * cos(( cursor->pose.position.y - y_) / lgv_effect_range * M_PI/2);
       cursor->pose.position.x = ( cursor->pose.position.x + target_x * lgv_fusion_ratio ) / (1 + lgv_fusion_ratio);
       /* cursor->pose.position.x = cursor->pose.position.x > path_x_max ? path_x_max : cursor->pose.position.x; */
       cursor->pose.position.x = boost::algorithm::clamp(cursor->pose.position.x, center_x-path_x_max,center_x + path_x_max);

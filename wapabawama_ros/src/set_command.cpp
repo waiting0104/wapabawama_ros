@@ -16,7 +16,7 @@
 /* #define GANTRY_RATIO 42.5 // Cartision to Real 0.1(m)/(rad), Wheel R = 9.5cm = 0.095m, st ratio = 0.1 */
 #define GANTRY_RATIO 21.25 // Cartision to Real 0.1(m)/(rad), Wheel R = 9.5cm = 0.095m, st ratio = 0.1
 #define LA_RATIO 36666.66 // Cartision to Real (m)/(tick)
-
+#define MAX_FLOW 32.31 // ml/sec                                                                                         
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "geometry_msgs/Pose.h"
@@ -64,6 +64,9 @@ double gantry_pos = 0;
 int valve1_pwm = 0;
 int valve2_pwm = 0;
 int valve3_pwm = 0;
+double valve1_flow = 0;
+double valve2_flow = 0;
+double valve3_flow = 0;
 int freq; // commend send freq
  
 void set_la1_poseCallback(const std_msgs::Float32::ConstPtr& msg) {
@@ -82,15 +85,15 @@ void set_gantryspeedCallback(const std_msgs::Float32::ConstPtr& msg) {
 }
 void set_valve1_pwmCallback(const std_msgs::Int8::ConstPtr& msg) {
   valve1_pwm = msg->data;
-  ROS_INFO("Valve1 pwm set to %d", valve1_pwm);
+  // ROS_INFO("Valve1 pwm set to %d", valve1_pwm);
 }
 void set_valve2_pwmCallback(const std_msgs::Int8::ConstPtr& msg) {
   valve2_pwm = msg->data;
-  ROS_INFO("Valve2 pwm set to %d", valve2_pwm);
+  // ROS_INFO("Valve2 pwm set to %d", valve2_pwm);
 }
 void set_valve3_pwmCallback(const std_msgs::Int8::ConstPtr& msg) {
   valve3_pwm = msg->data;
-  ROS_INFO("Valve3 pwm set to %d", valve3_pwm);
+  // ROS_INFO("Valve3 pwm set to %d", valve3_pwm);
 }
 int main(int argc, char **argv) {
   ros::init(argc, argv, "set_command");
@@ -209,6 +212,10 @@ int main(int argc, char **argv) {
       sys.setPWM(0,valve1_pwm);
       sys.setPWM(1,valve2_pwm);
       sys.setPWM(2,valve3_pwm);  
+      //set valve flow
+      // sys.setFlow(0,valve1_flow);
+      // sys.setFlow(1,valve2_flow);
+      // sys.setFlow(2,valve3_flow);  
     }
 
 #endif // SIMULATION
@@ -216,7 +223,6 @@ int main(int argc, char **argv) {
     last_time = current_time;
     ros::spinOnce();
     loop_rate.sleep();
-    std::cout<<Flow2PWM(15.7);
   }
 
 #ifndef SIMULATION
