@@ -6,7 +6,7 @@
   <arg name="finish_water_range"         default="0.07" />
   <arg name="path_x_max"         default="0.2" />
   <arg name="set_valve_pwm"         default="80" />
-
+  <arg name="watering_mode"         default="2" />
   <include file="$(find wapabawama_ros)/launch/detect.launch">
     <!-- <arg name="network_param_file" default="$(find darknet_ros)/config/lab_orchid_v4.yaml"/> -->
   </include>
