@@ -1,0 +1,30 @@
+<launch>
+  <arg name="maxDisappeared"         default="10" />
+  
+
+  <include file="$(find wapabawama_ros)/launch/detect.launch">
+    <!-- <arg name="network_param_file" default="$(find darknet_ros)/config/lab_orchid_v4.yaml"/> -->
+  </include>
+  <include file="$(find wapabawama_ros)/launch/tf.launch"/>
+
+  <!-- wapabawama_ros -->
+  <group ns="wapabawama_ros">
+    <include file="$(find wapabawama_ros)/launch/move.launch"/>
+    <!-- Detect Lgv -->
+    <node name="lgv_tracker_left" pkg="wapabawama_ros" type="lgv_tracker" output="screen">
+      <param name="image" value="/stereo/left/image_raw" />
+      <param name="window" value="window_left" />
+      <param name="bbox" value="/left_camera/darknet_ros/bounding_boxes" />
+      <param name="maxDisappeared" value="$(arg maxDisappeared)" />
+      <param name="freq" value="1000" />
+    </node>
+    <!-- <node name="lgv_tracker_right" pkg="wapabawama_ros" type="lgv_tracker" output="screen">
+      <param name="image" value="/right_camera/darknet_ros/detection_image" />
+      <param name="window" value="window_right" />
+      <param name="bbox" value="/right_camera/darknet_ros/bounding_boxes" />
+      <param name="maxDisappeared" value="$(arg maxDisappeared)" />
+    </node> -->
+   
+
+  </group>
+</launch>

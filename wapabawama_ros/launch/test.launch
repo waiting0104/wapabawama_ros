@@ -1,0 +1,11 @@
+<launch>
+  <include file="$(find wapabawama_ros)/launch/detect_single.launch">
+    <!-- <arg name="network_param_file" default="$(find darknet_ros)/config/lab_orchid_v4.yaml"/> -->
+  </include>
+  <group ns="wapabawama_ros">
+    <node name="sort" pkg="wapabawama_ros" type="sort.py" output="screen">
+        <param name="img_topic" value="/camera/image_raw" />
+
+    </node>
+  </group>
+</launch>

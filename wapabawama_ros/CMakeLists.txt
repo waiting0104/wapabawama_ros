@@ -161,6 +161,7 @@ add_executable(tf_map            src/tf_map.cpp)
 add_executable(record_place      src/record_place.cpp)
 add_executable(valve             src/valve.cpp)
 add_executable(detect_water_v1   src/detect_water_v1.cpp)
+add_executable(lgv_tracker src/lgv_tracker.cpp src/lgv.cpp src/centroidtracker.cpp  src/perspective.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -183,6 +184,7 @@ add_dependencies(tf_map            ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_
 add_dependencies(record_place      ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(valve             ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(detect_water_v1   ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(lgv_tracker             ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 # add_dependencies(pwm              ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
@@ -200,12 +202,15 @@ target_link_libraries(tf_map            ${catkin_LIBRARIES})
 target_link_libraries(record_place      ${catkin_LIBRARIES})
 target_link_libraries(valve             ${catkin_LIBRARIES})
 target_link_libraries(detect_water_v1   ${catkin_LIBRARIES})
+target_link_libraries(lgv_tracker   ${catkin_LIBRARIES})
 # target_link_libraries(pwm           ${catkin_LIBRARIES} system)
 if(OpenCV_FOUND)
     target_include_directories(lgv_detector PUBLIC ${OpenCV_INCLUDE_DIRS})
     target_link_libraries(lgv_detector ${OpenCV_LIBS})
     target_include_directories(lgv_detector_cv PUBLIC ${OpenCV_INCLUDE_DIRS})
     target_link_libraries(lgv_detector_cv ${OpenCV_LIBS})
+    target_include_directories(lgv_tracker PUBLIC ${OpenCV_INCLUDE_DIRS})
+    target_link_libraries(lgv_tracker ${OpenCV_LIBS})    
 endif()
 
 #############
@@ -218,7 +223,7 @@ endif()
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
-  scripts/set_gantry_speed.py scripts/gantry_script.py scripts/set_valve_pwm.py
+  scripts/set_gantry_speed.py scripts/gantry_script.py scripts/set_valve_pwm.py scripts/sort.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

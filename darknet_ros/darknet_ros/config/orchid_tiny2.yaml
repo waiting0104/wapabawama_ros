@@ -1,0 +1,11 @@
+yolo_model:
+
+  config_file:
+    name: orchid_tiny.cfg
+  weight_file:
+    name: orchid_tiny2.weights
+  threshold:
+    value: 0.4
+  detection_classes:
+    names:
+      - orchid

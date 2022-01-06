@@ -26,7 +26,7 @@
 #include <cmath>
 #include <lgv.h>
 #include <perspective.h>
-
+#include <centroidtracker.h>
  #define CV_SHOW 
 
 /*
@@ -60,7 +60,7 @@ class LgvDetector{
   typedef image_transport::SubscriberFilter ImageSub;
   typedef message_filters::Subscriber<darknet_ros_msgs::BoundingBoxes> BboxSub;
   typedef message_filters::Synchronizer< SyncPolicy > Syncr;
-
+  std::vector<std::pair<int, std::pair<int, int>>> objects;
   std::shared_ptr<ImageSub> image_sub_;
   std::shared_ptr<BboxSub>  bbox_sub_;
   std::shared_ptr<Syncr>    sync;
@@ -75,7 +75,7 @@ class LgvDetector{
   float _alpha, _beta, orig_cx, orig_cy, d, biasx, biasy;
   int box_y_limit;
   int box_expand;
-
+  CentroidTracker ct;
 public:
   LgvDetector() : it_(nh_) ,
                   tfListener(tfBuffer){
@@ -103,7 +103,8 @@ public:
     image_pub_ = it_.advertise("pose_img", 1);
 
 #ifdef CV_SHOW
-    cv::namedWindow(OPENCV_WINDOW);
+    cv::namedWindow(OPENCV_WINDOW, cv::WINDOW_NORMAL);
+    cv::resizeWindow(OPENCV_WINDOW, 1980 / 2, 1080 / 2);
 #endif // CV_SHOW
 
   }
@@ -136,7 +137,7 @@ public:
     }
     float gantry_x = transformStamped.transform.translation.x;
     float gantry_y = transformStamped.transform.translation.y;
-
+    objects = ct.update(bbox_msg->bounding_boxes);
 
     // Lgvs main
     geometry_msgs::PoseArray lgvs;
@@ -189,7 +190,17 @@ public:
     lgvs.header.stamp = ros::Time::now();
     lgvs.header.frame_id = "map";
     lgv_pub_.publish(lgvs);
+    if (!objects.empty())
+      {
+        for (auto &obj : objects)
+        {
+          cv::circle(cv_ptr->image, cv::Point(obj.second.first, obj.second.second), 4, cv::Scalar(255, 0, 0), -1);
+          std::string ID = std::to_string(obj.first);
 
+          putText(cv_ptr->image, ID, cv::Point(obj.second.first - 10, obj.second.second - 10),
+                  cv::FONT_HERSHEY_COMPLEX, 3, cv::Scalar(255, 255, 60), 2);
+        }
+      }
 #ifdef CV_SHOW
     cv::imshow(OPENCV_WINDOW, cv_ptr->image);
     cv::waitKey(3);
