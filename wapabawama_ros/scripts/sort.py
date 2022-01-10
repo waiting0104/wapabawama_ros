@@ -215,17 +215,17 @@ def associate_detections_to_trackers(detections,trackers,iou_threshold = 0.3):
 class Sort(object):
   def __init__(self, max_age=5, min_hits=1):
     rospy.init_node('sort', anonymous=True)
-    self.subb = rospy.Subscriber('/darknet_ros/bounding_boxes/', BoundingBoxes, self.boxcallback)
+    bbox_topic = rospy.get_param("~bbox","/darknet_ros/bounding_boxes")
+    display = rospy.get_param("~display", True)
+    max_age = rospy.get_param("~max_age", max_age)
+    min_hits = rospy.get_param("~min_hits", min_hits)
+    self.iou_threshold = rospy.get_param("~iou_threshold", 0.3)
+    self.subb = rospy.Subscriber(bbox_topic, BoundingBoxes, self.boxcallback)
     self.pubb = rospy.Publisher('/tracked_boxes', BoundingBoxes, queue_size=50)
     self.rate = rospy.Rate(30)
-    display = rospy.get_param("/display", True)
-    max_age = rospy.get_param("/max_age", max_age)
-    min_hits = rospy.get_param("/min_hits", min_hits)
-    self.iou_threshold = rospy.get_param("/iou_threshold", 0.3)
-
     if display:
-        img_topic = rospy.get_param('~img_topic', '/imx477/image_raw')
-        print(img_topic)
+        img_topic = rospy.get_param('~img_topic', '/camera/image_raw')
+        self.window_name = rospy.get_param('~window_name', 'image')
         self.display = display
         self.subimage = rospy.Subscriber(img_topic, Image, self.imgcallback)
         self.pubimage = rospy.Publisher('tracked_image', Image, queue_size=20)
@@ -340,12 +340,13 @@ if __name__ == '__main__':
                     res = trackers[d].astype(np.int32)
                     rgb=colours[res[4]%32,:]*255
                     cv2.rectangle(mot_tracker.img, (res[0],res[1]), (res[2],res[3]), (rgb[0],rgb[1],rgb[2]), 6)
-                    cv2.putText(mot_tracker.img, "ID : %d"%(res[4]), (res[0],res[1]), cv2.FONT_HERSHEY_SIMPLEX, 1.6, (200,85,200), 6)
+                    cv2.putText(mot_tracker.img, "ID : %d"%(res[4]), (res[0],res[1]), cv2.FONT_HERSHEY_SIMPLEX, 2, (rgb[0],rgb[1],rgb[2]), 10)
 
             if mot_tracker.img_in==1 and mot_tracker.display:
                 try : 
-                    cv2.imshow('Image',mot_tracker.img)
-                    cv2.waitKey(3)
+                    cv2.namedWindow(mot_tracker.window_name,0)
+                    cv2.resizeWindow(mot_tracker.window_name,1920/2,1080/2)
+
                     mot_tracker.image = mot_tracker.bridge.cv2_to_imgmsg(mot_tracker.img, "bgr8")
                     mot_tracker.image.header.stamp = rospy.Time.now()
                     mot_tracker.pubimage.publish(mot_tracker.image)
@@ -355,9 +356,11 @@ if __name__ == '__main__':
                 
             cycle_time = time.time() - start_time
             if len(r.bounding_boxes)>0: #prevent empty box
+                cv2.imshow(mot_tracker.window_name,mot_tracker.img)
+                cv2.waitKey(3)
                 r.header.stamp = rospy.Time.now()
                 mot_tracker.pubb.publish(r)
-                print(cycle_time)
+                # print(cycle_time)
                 
             mot_tracker.rate.sleep()
 

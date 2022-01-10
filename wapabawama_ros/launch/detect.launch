@@ -17,7 +17,7 @@
   <arg name="ros_param_file_left"  default="$(find darknet_ros)/config/camera_left.yaml"/>
   <arg name="ros_param_file_right" default="$(find darknet_ros)/config/camera_right.yaml"/>
   <!-- <arg name="network_param_file" default="$(find darknet_ros)/config/lab_orchid_v4.yaml"/> -->
-  <arg name="network_param_file"   default="$(find darknet_ros)/config/orchid_tiny.yaml"/>
+  <arg name="network_param_file"   default="$(find darknet_ros)/config/orchid_tiny2.yaml"/>
 
   <!-- Load parameters -->
   <rosparam command="load" ns="left_camera/darknet_ros"  file="$(arg ros_param_file_left)"/>

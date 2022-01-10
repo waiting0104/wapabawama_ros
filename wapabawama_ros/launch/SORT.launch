@@ -1,0 +1,19 @@
+<launch>
+  <include file="$(find wapabawama_ros)/launch/detect.launch">
+    <!-- <arg name="network_param_file" default="$(find darknet_ros)/config/lab_orchid_v4.yaml"/> -->
+  </include>
+  <include file="$(find wapabawama_ros)/launch/tf.launch"/>
+  <group ns="wapabawama_ros">
+    <include file="$(find wapabawama_ros)/launch/move.launch"/>
+    <node name="sort_left" pkg="wapabawama_ros" type="sort.py" output="screen">
+        <param name="img_topic" value="/stereo/left/image_raw" />
+        <param name="bbox" value="/left_camera/darknet_ros/bounding_boxes" />
+        <param name="window_name" value="left_window" />
+    </node>
+    <!-- <node name="sort_right" pkg="wapabawama_ros" type="sort.py" output="screen">
+        <param name="img_topic" value="/stereo/right/image_raw" />
+        <param name="bbox" value="/right_camera/darknet_ros/bounding_boxes" />
+        <param name="window_name" value="right_window" />
+    </node> -->
+  </group>
+</launch>
