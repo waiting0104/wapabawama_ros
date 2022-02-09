@@ -8,7 +8,7 @@ using namespace std;
 
 CentroidTracker::CentroidTracker() {
     this->nextObjectID = 0;
-    this->maxDisappeared = 10;
+    this->maxDisappeared = 5;
 }
 
 double CentroidTracker::calcDistance(double x1, double y1, double x2, double y2) {

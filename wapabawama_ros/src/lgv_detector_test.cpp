@@ -19,6 +19,8 @@
 #include <message_filters/synchronizer.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseArray.h>
+#include <wapabawama_ros/lgv.h>
+#include <wapabawama_ros/lgvs.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/transform_listener.h>
 #include <memory>
@@ -26,8 +28,8 @@
 #include <cmath>
 #include <lgv.h>
 #include <perspective.h>
-#include <centroidtracker.h>
- #define CV_SHOW 
+
+//  #define CV_SHOW 
 
 /*
  * pabawama(Path Base Water Machine)
@@ -60,7 +62,7 @@ class LgvDetector{
   typedef image_transport::SubscriberFilter ImageSub;
   typedef message_filters::Subscriber<darknet_ros_msgs::BoundingBoxes> BboxSub;
   typedef message_filters::Synchronizer< SyncPolicy > Syncr;
-  std::vector<std::pair<int, std::pair<int, int>>> objects;
+
   std::shared_ptr<ImageSub> image_sub_;
   std::shared_ptr<BboxSub>  bbox_sub_;
   std::shared_ptr<Syncr>    sync;
@@ -75,7 +77,7 @@ class LgvDetector{
   float _alpha, _beta, orig_cx, orig_cy, d, biasx, biasy;
   int box_y_limit;
   int box_expand;
-  CentroidTracker ct;
+
 public:
   LgvDetector() : it_(nh_) ,
                   tfListener(tfBuffer){
@@ -103,8 +105,7 @@ public:
     image_pub_ = it_.advertise("pose_img", 1);
 
 #ifdef CV_SHOW
-    cv::namedWindow(OPENCV_WINDOW, cv::WINDOW_NORMAL);
-    cv::resizeWindow(OPENCV_WINDOW, 1980 / 2, 1080 / 2);
+    cv::namedWindow(OPENCV_WINDOW);
 #endif // CV_SHOW
 
   }
@@ -137,10 +138,10 @@ public:
     }
     float gantry_x = transformStamped.transform.translation.x;
     float gantry_y = transformStamped.transform.translation.y;
-    objects = ct.update(bbox_msg->bounding_boxes);
+
 
     // Lgvs main
-    geometry_msgs::PoseArray lgvs;
+    wapabawama_ros::lgvs lgvs_msg;
     /* lgvs.poses.clear(); */
     for (auto& box:bbox_msg->bounding_boxes){
       // Get Bboxs and pub lgvs
@@ -157,48 +158,40 @@ public:
       cv::Rect new_roi = lgv::expandSquBox(roi,cv_ptr->image,box_expand);
       cv::Mat select_box = cv_ptr->image(new_roi);
       lgv::Lgvector lgv_ = lgv::fixsample_fit(select_box, lgv::cfn_ratio);
-
       /* float cx = ( lgv_.x + 1.5 * bbox_xmin + 0.5 * bbox_xmax ) / 2; */
       /* float cy = ( lgv_.y + 1.5 * bbox_ymin + 0.5 * bbox_ymax ) / 2; */
       float cx = ( lgv_.x + new_roi.width/2 ) / 2 + new_roi.x;
       float cy = ( lgv_.y + new_roi.height/2) / 2 + new_roi.y;
       float vx = lgv_.dx;
       float vy = lgv_.dy;
-
+      std::cout<<"ID:"<<box.id<<"COUNT="<<box.count<<std::endl;
       // Perspective to map frame
       cv::Point2d tf_vec = tf_persp_vec_v2( cv::Point2d(vx, vy) );
       cv::Point2d tf_cen = tf_persp_v2( cv::Point2d(cx, cy), _alpha/_beta, orig_cx, orig_cy, d);
       tf_cen *= 0.001; // To mm scale
-
-      geometry_msgs::Pose lgv_msg;
+      wapabawama_ros::lgv lgv_msg;
+      
+      // geometry_msgs::Pose lgv_msg;
       tf2::Quaternion quat_tf;
       /* quat_tf.setRPY(0,0,atan2(tf_vec.y, tf_vec.x) ); */
       quat_tf.setRPY(0,0,atan2(-tf_vec.x, tf_vec.y) );
       quat_tf.normalize();
-      lgv_msg.orientation = tf2::toMsg(quat_tf);;
-      lgv_msg.position.x = tf_cen.x + gantry_x + biasx;
-      lgv_msg.position.y = tf_cen.y + gantry_y + biasy;
+      lgv_msg.pose.orientation = tf2::toMsg(quat_tf);
+      lgv_msg.pose.position.x = tf_cen.x + gantry_x + biasx;
+      lgv_msg.pose.position.y = tf_cen.y + gantry_y + biasy;
       // Push data here
-      lgvs.poses.push_back(lgv_msg);
+      lgvs_msg.lgvs.push_back(lgv_msg);
 
       int vec_size = 100;
       cv::rectangle(cv_ptr->image, new_roi, cv::Scalar(0,0,255), 3);
-
+      auto p1 = cv::Point(cx+vx*vec_size, cy+vy*vec_size);
+      auto p2 = cv::Point(cx-vx*vec_size, cy-vy*vec_size);
+      cv::line(cv_ptr->image, p1, p2, cv::Scalar(0,0,200), 3, 4);
     }
-    lgvs.header.stamp = ros::Time::now();
-    lgvs.header.frame_id = "map";
-    lgv_pub_.publish(lgvs);
-    if (!objects.empty())
-      {
-        for (auto &obj : objects)
-        {
-          cv::circle(cv_ptr->image, cv::Point(obj.second.first, obj.second.second), 4, cv::Scalar(255, 0, 0), -1);
-          std::string ID = std::to_string(obj.first);
+    lgvs_msg.header.stamp = ros::Time::now();
+    lgvs_msg.header.frame_id = "map";
+    lgv_pub_.publish(lgvs_msg);
 
-          putText(cv_ptr->image, ID, cv::Point(obj.second.first - 10, obj.second.second - 10),
-                  cv::FONT_HERSHEY_COMPLEX, 3, cv::Scalar(255, 255, 60), 2);
-        }
-      }
 #ifdef CV_SHOW
     cv::imshow(OPENCV_WINDOW, cv_ptr->image);
     cv::waitKey(3);

@@ -103,7 +103,7 @@ public:
     image_pub_ = it_.advertise("pose_img", 1);
 
 #ifdef CV_SHOW
-    cv::namedWindow(OPENCV_WINDOW);
+    // cv::namedWindow(OPENCV_WINDOW);
 #endif // CV_SHOW
 
   }
@@ -156,7 +156,6 @@ public:
       cv::Rect new_roi = lgv::expandSquBox(roi,cv_ptr->image,box_expand);
       cv::Mat select_box = cv_ptr->image(new_roi);
       lgv::Lgvector lgv_ = lgv::fixsample_fit(select_box, lgv::cfn_ratio);
-
       /* float cx = ( lgv_.x + 1.5 * bbox_xmin + 0.5 * bbox_xmax ) / 2; */
       /* float cy = ( lgv_.y + 1.5 * bbox_ymin + 0.5 * bbox_ymax ) / 2; */
       float cx = ( lgv_.x + new_roi.width/2 ) / 2 + new_roi.x;
@@ -174,7 +173,7 @@ public:
       /* quat_tf.setRPY(0,0,atan2(tf_vec.y, tf_vec.x) ); */
       quat_tf.setRPY(0,0,atan2(-tf_vec.x, tf_vec.y) );
       quat_tf.normalize();
-      lgv_msg.orientation = tf2::toMsg(quat_tf);;
+      lgv_msg.orientation = tf2::toMsg(quat_tf);
       lgv_msg.position.x = tf_cen.x + gantry_x + biasx;
       lgv_msg.position.y = tf_cen.y + gantry_y + biasy;
       // Push data here
@@ -191,8 +190,8 @@ public:
     lgv_pub_.publish(lgvs);
 
 #ifdef CV_SHOW
-    cv::imshow(OPENCV_WINDOW, cv_ptr->image);
-    cv::waitKey(3);
+    // cv::imshow(OPENCV_WINDOW, cv_ptr->image);
+    // cv::waitKey(3);
 #endif // CV_SHOW
 
 

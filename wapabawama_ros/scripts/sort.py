@@ -15,6 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from __future__ import print_function
+from mimetypes import init
 
 import numpy as np
 import cv2
@@ -216,12 +217,13 @@ class Sort(object):
   def __init__(self, max_age=5, min_hits=1):
     rospy.init_node('sort', anonymous=True)
     bbox_topic = rospy.get_param("~bbox","/darknet_ros/bounding_boxes")
+    tracked_bbox_topic = rospy.get_param("~tracked_bbox","/tracked_boxes")
     display = rospy.get_param("~display", True)
     max_age = rospy.get_param("~max_age", max_age)
     min_hits = rospy.get_param("~min_hits", min_hits)
     self.iou_threshold = rospy.get_param("~iou_threshold", 0.3)
     self.subb = rospy.Subscriber(bbox_topic, BoundingBoxes, self.boxcallback)
-    self.pubb = rospy.Publisher('/tracked_boxes', BoundingBoxes, queue_size=50)
+    self.pubb = rospy.Publisher(tracked_bbox_topic, BoundingBoxes, queue_size=50)
     self.rate = rospy.Rate(30)
     if display:
         img_topic = rospy.get_param('~img_topic', '/camera/image_raw')
@@ -264,7 +266,7 @@ class Sort(object):
     self.bbox_checkin=1
     return
 
-  def update(self, dets=np.empty((0, 5))):
+  def update(self, dets=np.empty((0, 6))):
     """
     Params:
       dets - a numpy array of detections in the format [[x1,y1,x2,y2,score],[x1,y1,x2,y2,score],...]
@@ -273,13 +275,14 @@ class Sort(object):
     NOTE: The number of objects returned may differ from the number of detections provided.
     """
     self.frame_count += 1
+    
     # get predicted locations from existing trackers.
-    trks = np.zeros((len(self.trackers), 5))
+    trks = np.zeros((len(self.trackers), 6))
     to_del = []
     ret = []
     for t, trk in enumerate(trks):
       pos = self.trackers[t].predict()[0]
-      trk[:] = [pos[0], pos[1], pos[2], pos[3], 0]
+      trk[:] = [pos[0], pos[1], pos[2], pos[3], 0 ,0]
       if np.any(np.isnan(pos)):
         to_del.append(t)
     trks = np.ma.compress_rows(np.ma.masked_invalid(trks))
@@ -294,17 +297,21 @@ class Sort(object):
     # create and initialise new trackers for unmatched detections
     for i in unmatched_dets:
         trk = KalmanBoxTracker(dets[i,:])
+        
         self.trackers.append(trk)
     i = len(self.trackers)
+    
     for trk in reversed(self.trackers):
+
         d = trk.get_state()[0]
         if (trk.time_since_update < 1) and (trk.hit_streak >= self.min_hits or self.frame_count <= self.min_hits):
-          ret.append(np.concatenate((d,[trk.id+1])).reshape(1,-1)) # +1 as MOT benchmark requires positive
+          ret.append(np.concatenate((d,[trk.id+1],[int(trk.hits)])).reshape(1,-1)) # +1 as MOT benchmark requires positive
         i -= 1
         # remove dead tracklet
         if(trk.time_since_update > self.max_age):
           self.trackers.pop(i)
     if(len(ret)>0):
+
       return np.concatenate(ret)
     return np.empty((0,5))
 
@@ -313,9 +320,18 @@ class Sort(object):
 
 
 if __name__ == '__main__':
-    colours = np.random.rand(32, 3) #used only for display
+    np.random.seed(8)
+    colours = np.random.rand(31, 3) #used only for display
     mot_tracker = Sort(max_age=200, min_hits=1) #create instance of the SORT tracker
-   
+    count = 0 
+    init_r = BoundingBoxes()
+    for i in range(0,500):
+      x = BoundingBox()
+      x.id = i 
+      init_r.bounding_boxes.append(x)
+    # for element in init_r.bounding_boxes:
+    #   if element.id==3:
+    #     print(element.id)
     while True:
         try:
             start_time = time.time()
@@ -323,9 +339,10 @@ if __name__ == '__main__':
                 trackers = mot_tracker.update(mot_tracker.dets)
                 mot_tracker.bbox_checkin=0
             else:
-                trackers = mot_tracker.update(np.empty((0,5)))
-          
+                trackers = mot_tracker.update(np.empty((0,6)))
+
             r = BoundingBoxes()
+            # print(trackers)
             for d in range(len(trackers)):
                 rb = BoundingBox()
                 rb.probability=1
@@ -334,30 +351,36 @@ if __name__ == '__main__':
                 rb.xmax = int(trackers[d,2])
                 rb.ymax = int(trackers[d,3])
                 rb.id = int(trackers[d,4])
+                rb.count = int(trackers[d,5])
+                print("id=",rb.id,"count:",rb.count) 
+                if rb.id>count:
+                  count = rb.id
                 rb.Class = 'tracked'
                 r.bounding_boxes.append(rb)
                 if mot_tracker.img_in==1 and mot_tracker.display:
                     res = trackers[d].astype(np.int32)
-                    rgb=colours[res[4]%32,:]*255
+                    rgb=colours[res[4]%31,:]*255
                     cv2.rectangle(mot_tracker.img, (res[0],res[1]), (res[2],res[3]), (rgb[0],rgb[1],rgb[2]), 6)
-                    cv2.putText(mot_tracker.img, "ID : %d"%(res[4]), (res[0],res[1]), cv2.FONT_HERSHEY_SIMPLEX, 2, (rgb[0],rgb[1],rgb[2]), 10)
-
+                    cv2.putText(mot_tracker.img, "ID : %d"%(res[4]), (res[0],res[1]), cv2.FONT_HERSHEY_COMPLEX, 2, (0 ,0 ,255), 5)
+                
+            
             if mot_tracker.img_in==1 and mot_tracker.display:
                 try : 
-                    cv2.namedWindow(mot_tracker.window_name,0)
-                    cv2.resizeWindow(mot_tracker.window_name,1920/2,1080/2)
+                    # cv2.namedWindow(mot_tracker.window_name,0)
+                    # cv2.resizeWindow(mot_tracker.window_name,1920/2,1080/2)
 
                     mot_tracker.image = mot_tracker.bridge.cv2_to_imgmsg(mot_tracker.img, "bgr8")
                     mot_tracker.image.header.stamp = rospy.Time.now()
                     mot_tracker.pubimage.publish(mot_tracker.image)
                     
                 except CvBridgeError as e:
-                    pass
-                
+                    pass      
+
             cycle_time = time.time() - start_time
             if len(r.bounding_boxes)>0: #prevent empty box
-                cv2.imshow(mot_tracker.window_name,mot_tracker.img)
-                cv2.waitKey(3)
+                # cv2.putText(mot_tracker.img, "Orchid counts : %d"%count, (20,120), cv2.FONT_HERSHEY_COMPLEX, 3.5, (114,228,120), 10)
+                # cv2.imshow(mot_tracker.window_name,mot_tracker.img)
+                # cv2.waitKey(3)
                 r.header.stamp = rospy.Time.now()
                 mot_tracker.pubb.publish(r)
                 # print(cycle_time)

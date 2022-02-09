@@ -8,6 +8,7 @@
     <node name="sort_left" pkg="wapabawama_ros" type="sort.py" output="screen">
         <param name="img_topic" value="/stereo/left/image_raw" />
         <param name="bbox" value="/left_camera/darknet_ros/bounding_boxes" />
+        <param name="tracked_bbox" value="/left_camera/tracked_boxes" />
         <param name="window_name" value="left_window" />
     </node>
     <!-- <node name="sort_right" pkg="wapabawama_ros" type="sort.py" output="screen">

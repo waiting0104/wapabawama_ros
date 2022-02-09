@@ -10,20 +10,29 @@
   <!-- wapabawama_ros -->
   <group ns="wapabawama_ros">
     <include file="$(find wapabawama_ros)/launch/move.launch"/>
-    <!-- Detect Lgv -->
-    <node name="lgv_tracker_left" pkg="wapabawama_ros" type="lgv_tracker" output="screen">
-      <param name="image" value="/stereo/left/image_raw" />
-      <param name="window" value="window_left" />
-      <param name="bbox" value="/left_camera/darknet_ros/bounding_boxes" />
-      <param name="maxDisappeared" value="$(arg maxDisappeared)" />
-      <param name="freq" value="1000" />
+    <node name="SORT_left" pkg="wapabawama_ros" type="sort.py" output="screen">
+        <param name="img_topic" value="/stereo/left/image_raw" />
+        <param name="bbox" value="/left_camera/darknet_ros/bounding_boxes" />
+        <param name="tracked_bbox" value="/left_camera/tracked_boxes" />
+        <param name="window_name" value="left_window" />
     </node>
-    <!-- <node name="lgv_tracker_right" pkg="wapabawama_ros" type="lgv_tracker" output="screen">
-      <param name="image" value="/right_camera/darknet_ros/detection_image" />
-      <param name="window" value="window_right" />
-      <param name="bbox" value="/right_camera/darknet_ros/bounding_boxes" />
-      <param name="maxDisappeared" value="$(arg maxDisappeared)" />
-    </node> -->
+    <!-- Detect Lgv -->
+    <node name="lgv_detector_left" pkg="wapabawama_ros" type="lgv_detector_test" output="screen">
+      <param name="image" value="/stereo/left/image_raw" />
+      <param name="bbox" value="/left_camera/tracked_boxes" />
+      <param name="alpha" value="395" />
+      <param name="beta" value="1459" />
+      <param name="cx" value="1577" />
+      <param name="cy" value="425" />
+      <param name="d" value="395" />
+      <!-- <param name="biasx" value="0.05" /> -->
+      <!-- <param name="biasy" value="-0.02" /> -->
+      <!-- <param name="biasy" value="-0.07" /> -->
+      <!-- <remap from="lgvs" to="set_lgvs" /> -->
+      <param name="box_expand" value="30" />
+    </node>
+
+    
    
 
   </group>
