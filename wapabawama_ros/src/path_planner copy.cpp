@@ -9,7 +9,7 @@
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include <nav_msgs/Path.h>
-#include <wapabawama_ros/lgvs.h>
+#include <geometry_msgs/PoseArray.h>
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
 /* #include <algorithm> */
@@ -53,7 +53,7 @@ class Planner{
     la_path.header.frame_id = "map";
 
     path_pub = nh_.advertise<nav_msgs::Path>(path_name, 10);
-    lgvs_sub = nh_.subscribe("lgvs_tracked", 10, &Planner::lgvsCallback, this);
+    lgvs_sub = nh_.subscribe("lgvs", 10, &Planner::lgvsCallback, this);
 
     // Init path
     for (int i=0; i<path_size; i++) {
@@ -70,20 +70,20 @@ class Planner{
     la_path.poses.push_back(pose_);
   }
 
-  void lgvsCallback(const wapabawama_ros::lgvs::ConstPtr& msg) {
-    for (auto& lgv:msg->lgvs) {
-      if ( abs( lgv.pose.position.x - center_x ) < lgv_dist_range ) {
+  void lgvsCallback(const geometry_msgs::PoseArray::ConstPtr& msg) {
+    for (auto& lgv:msg->poses) {
+      if ( abs( lgv.position.x - center_x ) < lgv_dist_range ) {
         auto last_y = la_path.poses.back().pose.position.y;
-        if ( lgv.pose.position.y < last_y ) {
+        if ( lgv.position.y < last_y ) {
           // Only if lgv in this range will be done
-          auto q = lgv.pose.orientation;
+          auto q = lgv.orientation;
           float angle = atan2(2 * (q.x*q.y + q.w*q.z), q.w*q.w + q.x*q.x - q.y*q.y - q.z*q.z);
           /* angle = boost::algorithm::clamp(angle, 0.5, 2.64); */
           if (angle < 0.2 && angle > -0.2) continue;
             
           lgv_main(
-              lgv.pose.position.x,
-              lgv.pose.position.y,
+              lgv.position.x,
+              lgv.position.y,
               angle);
         }
       }
@@ -165,8 +165,3 @@ int main(int argc, char **argv) {
   }
   return 0;
 }
-
-
-
-
-

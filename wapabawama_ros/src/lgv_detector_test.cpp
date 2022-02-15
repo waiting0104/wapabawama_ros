@@ -53,7 +53,7 @@ class LgvDetector{
 
   std::string sub_image_topic;
   std::string sub_bbox_topic;
-
+  std::string pub_lgvs_topic;
   // Define Sync Policy
   typedef message_filters::sync_policies::ApproximateTime<
       sensor_msgs::Image, 
@@ -71,6 +71,7 @@ class LgvDetector{
   tf2_ros::TransformListener tfListener;
 
   ros::Publisher lgv_pub_;
+  ros::Publisher lgv_pub_tracked;
   image_transport::Publisher image_pub_;
 
   /* int biasx, biasy; */
@@ -84,7 +85,7 @@ public:
     ros::NodeHandle pn_("~");
     pn_.param<std::string>( "image", sub_image_topic, "/camera/image_raw" );
     pn_.param<std::string>( "bbox" , sub_bbox_topic , "/darknet_ros/bounding_boxes" );
-
+    pn_.param<std::string>( "pub_lgvs_topic", pub_lgvs_topic, "lgvs_tracked" );
     pn_.param<float>( "alpha", _alpha,0 );
     pn_.param<float>( "beta",  _beta, 0 );
     pn_.param<float>( "cx",    orig_cx,    0 );
@@ -102,6 +103,7 @@ public:
     sync->registerCallback( boost::bind( &LgvDetector::callback, this, _1, _2 ) );
 
     lgv_pub_ = nh_.advertise<geometry_msgs::PoseArray>("lgvs", 10);
+    lgv_pub_tracked = nh_.advertise<wapabawama_ros::lgvs>(pub_lgvs_topic, 10);
     image_pub_ = it_.advertise("pose_img", 1);
 
 #ifdef CV_SHOW
@@ -141,19 +143,12 @@ public:
 
 
     // Lgvs main
-    wapabawama_ros::lgvs lgvs_msg;
+    wapabawama_ros::lgvs lgvs_tracked;
+
     /* lgvs.poses.clear(); */
     for (auto& box:bbox_msg->bounding_boxes){
       // Get Bboxs and pub lgvs
-      /* if ( box.ymin < box_y_limit || box.ymax > 1920- box_y_limit) continue; */
-      /* int bbox_xmin = box.xmin - box_expand; */
-      /* int bbox_ymin = box.ymin - box_expand; */
-      /* int bbox_xmax = box.xmax + box_expand; */
-      /* int bbox_ymax = box.ymax + box_expand; */
-      /* bbox_xmin = bbox_xmin < 0 ? 0 : bbox_xmin; */
-      /* bbox_ymin = bbox_ymin < 0 ? 0 : bbox_ymin; */
-      /* bbox_xmax = bbox_xmax > 1920 ? 1920 : bbox_xmax; */
-      /* bbox_ymax = bbox_ymax > 1080 ? 1080 : bbox_ymax; */
+
       cv::Rect roi( box.xmin, box.ymin, (box.xmax - box.xmin), (box.ymax - box.ymin) );
       cv::Rect new_roi = lgv::expandSquBox(roi,cv_ptr->image,box_expand);
       cv::Mat select_box = cv_ptr->image(new_roi);
@@ -164,34 +159,38 @@ public:
       float cy = ( lgv_.y + new_roi.height/2) / 2 + new_roi.y;
       float vx = lgv_.dx;
       float vy = lgv_.dy;
-      std::cout<<"ID:"<<box.id<<"COUNT="<<box.count<<std::endl;
+      // std::cout<<"ID:"<<box.id<<"COUNT="<<box.count<<std::endl;
+
       // Perspective to map frame
       cv::Point2d tf_vec = tf_persp_vec_v2( cv::Point2d(vx, vy) );
       cv::Point2d tf_cen = tf_persp_v2( cv::Point2d(cx, cy), _alpha/_beta, orig_cx, orig_cy, d);
       tf_cen *= 0.001; // To mm scale
-      wapabawama_ros::lgv lgv_msg;
+
+      wapabawama_ros::lgv lgv_msg_tracked;
       
       // geometry_msgs::Pose lgv_msg;
       tf2::Quaternion quat_tf;
       /* quat_tf.setRPY(0,0,atan2(tf_vec.y, tf_vec.x) ); */
       quat_tf.setRPY(0,0,atan2(-tf_vec.x, tf_vec.y) );
       quat_tf.normalize();
-      lgv_msg.pose.orientation = tf2::toMsg(quat_tf);
-      lgv_msg.pose.position.x = tf_cen.x + gantry_x + biasx;
-      lgv_msg.pose.position.y = tf_cen.y + gantry_y + biasy;
+      lgv_msg_tracked.pose.orientation = tf2::toMsg(quat_tf); 
+      lgv_msg_tracked.pose.position.x = tf_cen.x + gantry_x + biasx;
+      lgv_msg_tracked.pose.position.y = tf_cen.y + gantry_y + biasy;
+      lgv_msg_tracked.ID = box.id;
+      lgv_msg_tracked.count = box.count;
       // Push data here
-      lgvs_msg.lgvs.push_back(lgv_msg);
-
+      lgvs_tracked.lgvs.push_back(lgv_msg_tracked);
+  
       int vec_size = 100;
       cv::rectangle(cv_ptr->image, new_roi, cv::Scalar(0,0,255), 3);
       auto p1 = cv::Point(cx+vx*vec_size, cy+vy*vec_size);
       auto p2 = cv::Point(cx-vx*vec_size, cy-vy*vec_size);
       cv::line(cv_ptr->image, p1, p2, cv::Scalar(0,0,200), 3, 4);
     }
-    lgvs_msg.header.stamp = ros::Time::now();
-    lgvs_msg.header.frame_id = "map";
-    lgv_pub_.publish(lgvs_msg);
 
+    lgvs_tracked.header.stamp = ros::Time::now();
+    lgvs_tracked.header.frame_id = "map";
+    lgv_pub_tracked.publish(lgvs_tracked);
 #ifdef CV_SHOW
     cv::imshow(OPENCV_WINDOW, cv_ptr->image);
     cv::waitKey(3);

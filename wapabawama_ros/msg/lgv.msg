@@ -1,2 +1,3 @@
 geometry_msgs/Pose pose
-geometry_msgs/Point real_position
+int32 ID
+int32 count

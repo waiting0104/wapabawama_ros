@@ -8,14 +8,13 @@
 #include <std_msgs/String.h>
 #include <nav_msgs/Path.h>
 #include <wapabawama_ros/lgvs.h>
+#include <geometry_msgs/PoseArray.h>
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <std_msgs/Int8.h>
+/* #include <algorithm> */
 #include <boost/algorithm/clamp.hpp>
-/*
-watering_mode : 1 is keep watering mode
-                2 is stop watering when moving mode
-                */
+
 class Valve
 {
     std::string path_name;
@@ -57,7 +56,7 @@ public:
         }
     }
 
-    void lgvsCallback(const wapabawama_ros::lgvs::ConstPtr &msg)
+    void lgvsCallback(const wapabawama::lgvs::ConstPtr &msg)
     {
         detect_sign = true;
         geometry_msgs::TransformStamped transformStamped;
@@ -75,39 +74,41 @@ public:
         // Linear Actuator Follow Path
         float la_y = transformStamped.transform.translation.y;
         float la_x = transformStamped.transform.translation.x;
-        // std::cout<<"la_x:"<<la_x<<std::endl;
-        // std::cout<<"la_y:"<<la_y<<std::endl;
 
         for (auto &lgv : msg->lgvs)
-        {           
-            // std::cout<<"lgv.pose.position.y - start_water_range:"<<lgv.pose.position.y - start_water_range<<std::endl;
-            // std::cout<<"lgv.pose.position.y + finish_water_range:"<<lgv.pose.position.y + finish_water_range<<std::endl;
-            if (abs(lgv.pose.position.x - center_x) < lgv_dist_range) 
+        {
+            if (abs(lgv.position.x - center_x) < lgv_dist_range)
             {
-                if (la_y > lgv.pose.position.y - start_water_range && la_y < lgv.pose.position.y + finish_water_range)
+                // auto last_y = la_path.poses.back().pose.position.y;
+                // if (lgv.position.y < last_y)
+                // {
+                // Only if lgv in this range will be done
+                auto q = lgv.orientation;
+                float angle = atan2(2 * (q.x * q.y + q.w * q.z), q.w * q.w + q.x * q.x - q.y * q.y - q.z * q.z);
+                /* angle = boost::algorithm::clamp(angle, 0.5, 2.64); */
+
+                if (la_y > lgv.position.y - start_water_range && la_y < lgv.position.y + finish_water_range)
                 {
-                    
-                    auto q = lgv.pose.orientation;
-                    float angle = atan2(2 * (q.x * q.y + q.w * q.z), q.w * q.w + q.x * q.x - q.y * q.y - q.z * q.z);
                     valve_pwm.data = set_pwm;
                 }
                 else
                     valve_pwm.data = 0;
-
             }
         }
     }
 
     void loop()
-    {   
-    
+    {
+        if (!detect_sign && watering_mode == 2)
+            valve_pwm.data = 0;
         if (valve_pwm.data != last_pwm)
         {
+            valve_pwm_pub.publish(valve_pwm);
+            std::cout << "Publish " << pwm_name << " is : " << valve_pwm << std::endl;
         }
-        valve_pwm_pub.publish(valve_pwm);
-        // std::cout << "Publish " << pwm_name << " is : " << valve_pwm.data << std::endl;
-        // last_pwm = valve_pwm.data;
 
+        last_pwm = valve_pwm.data;
+        detect_sign = false;
     }
 };
 

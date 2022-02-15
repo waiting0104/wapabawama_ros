@@ -1,6 +1,13 @@
 <launch>
   <arg name="maxDisappeared"         default="10" />
-  
+  <arg name="path_integ"         default="0.01" />
+  <arg name="effect_x_range"         default="0.1" />
+  <arg name="effect_y_range"         default="0.15" />
+  <arg name="start_water_range"         default="0.15" />
+  <arg name="finish_water_range"         default="0.07" />
+  <arg name="path_x_max"         default="0.2" />
+  <arg name="set_valve_pwm"         default="80" />
+  <arg name="watering_mode"         default="2" />  
 
   <include file="$(find wapabawama_ros)/launch/detect.launch">
     <!-- <arg name="network_param_file" default="$(find darknet_ros)/config/lab_orchid_v4.yaml"/> -->
@@ -16,24 +23,63 @@
         <param name="tracked_bbox" value="/left_camera/tracked_boxes" />
         <param name="window_name" value="left_window" />
     </node>
+    <node name="SORT_right" pkg="wapabawama_ros" type="sort.py" output="screen">
+        <param name="img_topic" value="/stereo/right/image_raw" />
+        <param name="bbox" value="/right_camera/darknet_ros/bounding_boxes" />
+        <param name="tracked_bbox" value="/right_camera/tracked_boxes" />
+        <param name="window_name" value="right_window" />
+    </node>
     <!-- Detect Lgv -->
     <node name="lgv_detector_left" pkg="wapabawama_ros" type="lgv_detector_test" output="screen">
       <param name="image" value="/stereo/left/image_raw" />
       <param name="bbox" value="/left_camera/tracked_boxes" />
+      <param name="pub_lgvs_topic" value="/left/lgvs_tracked" />
       <param name="alpha" value="395" />
       <param name="beta" value="1459" />
       <param name="cx" value="1577" />
       <param name="cy" value="425" />
       <param name="d" value="395" />
-      <!-- <param name="biasx" value="0.05" /> -->
-      <!-- <param name="biasy" value="-0.02" /> -->
-      <!-- <param name="biasy" value="-0.07" /> -->
-      <!-- <remap from="lgvs" to="set_lgvs" /> -->
       <param name="box_expand" value="30" />
     </node>
-
+    <node name="lgv_detector_right" pkg="wapabawama_ros" type="lgv_detector_test" output="screen">
+      <param name="image" value="/stereo/right/image_raw" />
+      <param name="bbox" value="/right_camera/tracked_boxes" />
+      <param name="pub_lgvs_topic" value="/right/lgvs_tracked" />
+      <param name="alpha" value="395" />
+      <param name="beta" value="1457" />
+      <param name="cx" value="417" />
+      <param name="cy" value="385" />
+      <param name="d" value="395" />
+      <param name="biasx" value="0.02" />
+      <param name="box_expand" value="30" />
+    </node>
+    <!-- Record Lgvs -->
+    <node name="lgv_recorder" pkg="wapabawama_ros" type="lgv_recorder" output="screen">
+      <!-- <param name="sub_lgvs_topic" value="lgvs_tracked" /> -->
+      <param name="pub_lgvs_topic" value="lgvs_record" />
+    </node>
     
-   
+    <node name="path_planner_la3" pkg="wapabawama_ros" type="path_planner" output="screen">
+      <param name="path_name"        value="la3/path"/>
+      <param name="center_x"         value="-0.22"/>
+      <param name="max_y"            value="1"/>
+      <param name="interval"         value="0.0001"/>
+      <param name="lgv_dist_range"   value="$(arg effect_x_range)"/>
+      <param name="lgv_effect_range" value="$(arg effect_y_range)"/>
+      <param name="lgv_fusion_ratio" value="$(arg path_integ)"/>
+      <param name="path_x_max"       value="$(arg path_x_max)"/>
+    </node>
+
+    <node name="watering_vl3" pkg="wapabawama_ros" type="watering" output="screen">
+      <param name="path_name"        value="la3/path"/>
+      <param name="frame_name" value="la3"/>
+      <param name="watering_mode" value="$(arg watering_mode)"/>
+      <param name="pwm_name"         value="valve3/pwm"/>
+      <param name="center_x"         value="-0.22"/>
+      <param name="set_pwm"            value="$(arg set_valve_pwm)"/>    
+      <param name="start_water_range" value="$(arg start_water_range)"/>
+      <param name="finish_water_range" value="$(arg finish_water_range)"/>
+    </node>        
 
   </group>
 </launch>

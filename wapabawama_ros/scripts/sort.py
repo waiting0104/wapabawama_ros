@@ -352,7 +352,7 @@ if __name__ == '__main__':
                 rb.ymax = int(trackers[d,3])
                 rb.id = int(trackers[d,4])
                 rb.count = int(trackers[d,5])
-                print("id=",rb.id,"count:",rb.count) 
+                # print("id=",rb.id,"count:",rb.count) 
                 if rb.id>count:
                   count = rb.id
                 rb.Class = 'tracked'
