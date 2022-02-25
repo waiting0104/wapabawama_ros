@@ -51,7 +51,7 @@ class LgvDetector{
 
   std::string sub_image_topic;
   std::string sub_bbox_topic;
-
+  std::string pub_img_topic ;
   // Define Sync Policy
   typedef message_filters::sync_policies::ApproximateTime<
       sensor_msgs::Image, 
@@ -82,7 +82,7 @@ public:
     ros::NodeHandle pn_("~");
     pn_.param<std::string>( "image", sub_image_topic, "/camera/image_raw" );
     pn_.param<std::string>( "bbox" , sub_bbox_topic , "/darknet_ros/bounding_boxes" );
-
+    pn_.param<std::string>( "pub_img_topic", pub_img_topic, "pose_img" );
     pn_.param<float>( "alpha", _alpha,0 );
     pn_.param<float>( "beta",  _beta, 0 );
     pn_.param<float>( "cx",    orig_cx,    0 );
@@ -100,7 +100,7 @@ public:
     sync->registerCallback( boost::bind( &LgvDetector::callback, this, _1, _2 ) );
 
     lgv_pub_ = nh_.advertise<geometry_msgs::PoseArray>("lgvs", 10);
-    image_pub_ = it_.advertise("pose_img", 1);
+    image_pub_ = it_.advertise(pub_img_topic, 1);
 
 #ifdef CV_SHOW
     // cv::namedWindow(OPENCV_WINDOW);
@@ -162,12 +162,12 @@ public:
       float cy = ( lgv_.y + new_roi.height/2) / 2 + new_roi.y;
       float vx = lgv_.dx;
       float vy = lgv_.dy;
-
+      std::cout<<cx;
       // Perspective to map frame
       cv::Point2d tf_vec = tf_persp_vec_v2( cv::Point2d(vx, vy) );
       cv::Point2d tf_cen = tf_persp_v2( cv::Point2d(cx, cy), _alpha/_beta, orig_cx, orig_cy, d);
       tf_cen *= 0.001; // To mm scale
-
+      
       geometry_msgs::Pose lgv_msg;
       tf2::Quaternion quat_tf;
       /* quat_tf.setRPY(0,0,atan2(tf_vec.y, tf_vec.x) ); */
@@ -184,6 +184,7 @@ public:
       auto p1 = cv::Point(cx+vx*vec_size, cy+vy*vec_size);
       auto p2 = cv::Point(cx-vx*vec_size, cy-vy*vec_size);
       cv::line(cv_ptr->image, p1, p2, cv::Scalar(0,0,200), 3, 4);
+      std::cout<<cv_ptr->image.size()<<std::endl;
     }
     lgvs.header.stamp = ros::Time::now();
     lgvs.header.frame_id = "map";

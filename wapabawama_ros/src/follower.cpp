@@ -67,7 +67,7 @@ class Follower{
     // Linear Actuator Follow Path
     float la_y = transformStamped.transform.translation.y;
     float la_x = transformStamped.transform.translation.x;
-
+    // std::cout << "frame_name:" << 1000*la_y << std::endl;
     if ( !path_.empty() ) {
       auto cursor = path_.rbegin();
       while (cursor != ( path_.rend()-1 ) && cursor->pose.position.y > la_y) { cursor++; }

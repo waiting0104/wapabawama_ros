@@ -49,11 +49,9 @@ public:
         pn_.param<float>("start_water_range", start_water_range, 0.08);
         pn_.param<float>("finish_water_range", finish_water_range, 0.08);
         valve_pwm_pub = nh_.advertise<std_msgs::Int8>(pwm_name, 10);
+    
+        lgvs_sub = nh_.subscribe("lgvs_record", 10, &Valve::lgvsCallback, this);
         
-        if (watering_mode == 2)
-        {
-            lgvs_sub = nh_.subscribe("lgvs_record", 10, &Valve::lgvsCallback, this);
-        }
     }
 
     void lgvsCallback(const wapabawama::lgvs::ConstPtr &msg)

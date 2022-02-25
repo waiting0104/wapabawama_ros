@@ -81,7 +81,7 @@ void set_la3_poseCallback(const std_msgs::Float32::ConstPtr& msg) {
 
 void set_gantryspeedCallback(const std_msgs::Float32::ConstPtr& msg) {
   gantry_speed_cmd = msg->data;
-  ROS_INFO("Gantry Speed set to %f", gantry_speed_cmd);
+  // ROS_INFO("Gantry Speed set to %f", gantry_speed_cmd);
 }
 void set_valve1_pwmCallback(const std_msgs::Int8::ConstPtr& msg) {
   valve1_pwm = msg->data;
@@ -117,7 +117,7 @@ int main(int argc, char **argv) {
   pn_.param<std::string>( "sub_valve1_pwm" , sub_valve1_pwm_name , "valve1/pwm" );
   pn_.param<std::string>( "sub_valve2_pwm" , sub_valve2_pwm_name , "valve2/pwm" );  
   pn_.param<std::string>( "sub_valve3_pwm" , sub_valve3_pwm_name , "valve3/pwm" );
-  pn_.param<int>( "freq", freq, 20);
+  pn_.param<int>( "freq", freq, 30);
 
 #ifndef SIMULATION
   sys.init(dev_name,bdrate);

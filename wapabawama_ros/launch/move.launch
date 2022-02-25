@@ -7,7 +7,7 @@
   <node name="set_command" pkg="wapabawama_ros" type="set_command" output="screen">
     <param name="device_name" value="/dev/ttyTHS0" />
     <param name="baud_rate" value="115200" />
-    <param name="freq" value="10" />
+    <param name="freq" value="12" />
     <param name="gantry_pub"        value="gantry/pose"/>
     <param name="gantry_pub_speed"  value="gantry/speed"/>
     <param name="la1_pub"           value="la1/pose"/>

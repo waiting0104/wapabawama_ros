@@ -54,6 +54,7 @@ class LgvDetector{
   std::string sub_image_topic;
   std::string sub_bbox_topic;
   std::string pub_lgvs_topic;
+  std::string pub_img_topic ;
   // Define Sync Policy
   typedef message_filters::sync_policies::ApproximateTime<
       sensor_msgs::Image, 
@@ -86,6 +87,7 @@ public:
     pn_.param<std::string>( "image", sub_image_topic, "/camera/image_raw" );
     pn_.param<std::string>( "bbox" , sub_bbox_topic , "/darknet_ros/bounding_boxes" );
     pn_.param<std::string>( "pub_lgvs_topic", pub_lgvs_topic, "lgvs_tracked" );
+    pn_.param<std::string>( "pub_img_topic", pub_img_topic, "pose_img" );
     pn_.param<float>( "alpha", _alpha,0 );
     pn_.param<float>( "beta",  _beta, 0 );
     pn_.param<float>( "cx",    orig_cx,    0 );
@@ -104,7 +106,7 @@ public:
 
     lgv_pub_ = nh_.advertise<geometry_msgs::PoseArray>("lgvs", 10);
     lgv_pub_tracked = nh_.advertise<wapabawama_ros::lgvs>(pub_lgvs_topic, 10);
-    image_pub_ = it_.advertise("pose_img", 1);
+    image_pub_ = it_.advertise(pub_img_topic, 1);
 
 #ifdef CV_SHOW
     cv::namedWindow(OPENCV_WINDOW);
@@ -159,11 +161,12 @@ public:
       float cy = ( lgv_.y + new_roi.height/2) / 2 + new_roi.y;
       float vx = lgv_.dx;
       float vy = lgv_.dy;
-      // std::cout<<"ID:"<<box.id<<"COUNT="<<box.count<<std::endl;
+
 
       // Perspective to map frame
       cv::Point2d tf_vec = tf_persp_vec_v2( cv::Point2d(vx, vy) );
       cv::Point2d tf_cen = tf_persp_v2( cv::Point2d(cx, cy), _alpha/_beta, orig_cx, orig_cy, d);
+      // std::cout<<tf_cen.x<<std::endl;
       tf_cen *= 0.001; // To mm scale
 
       wapabawama_ros::lgv lgv_msg_tracked;
@@ -171,8 +174,11 @@ public:
       // geometry_msgs::Pose lgv_msg;
       tf2::Quaternion quat_tf;
       /* quat_tf.setRPY(0,0,atan2(tf_vec.y, tf_vec.x) ); */
-      quat_tf.setRPY(0,0,atan2(-tf_vec.x, tf_vec.y) );
+      quat_tf.setRPY(0,0,atan2(tf_vec.y, -tf_vec.x) );
       quat_tf.normalize();
+
+
+      // float angle = atan2(2 * (quat_tf.x()*quat_tf.y() + quat_tf.w()*quat_tf.z()), quat_tf.w()*quat_tf.w() + quat_tf.x()*quat_tf.x() - quat_tf.y()*quat_tf.y() - quat_tf.z()*quat_tf.z());
       lgv_msg_tracked.pose.orientation = tf2::toMsg(quat_tf); 
       lgv_msg_tracked.pose.position.x = tf_cen.x + gantry_x + biasx;
       lgv_msg_tracked.pose.position.y = tf_cen.y + gantry_y + biasy;

@@ -19,6 +19,7 @@
     <!-- Detect Lgv -->
     <node name="lgv_detector_left" pkg="wapabawama_ros" type="lgv_detector" output="screen">
       <param name="image" value="/stereo/left/image_raw" />
+      <param name="pub_img_topic" value="/left/pose_img" />
       <param name="bbox" value="/left_camera/darknet_ros/bounding_boxes" />
       <param name="alpha" value="395" />
       <param name="beta" value="1459" />
@@ -34,6 +35,7 @@
 
     <node name="lgv_detector_right" pkg="wapabawama_ros" type="lgv_detector" output="screen">
       <param name="image" value="/stereo/right/image_raw" />
+      <param name="pub_img_topic" value="/right/pose_img" />
       <param name="bbox" value="/right_camera/darknet_ros/bounding_boxes" />
       <param name="alpha" value="395" />
       <param name="beta" value="1457" />
@@ -54,6 +56,7 @@
     <node name="follower_la1" pkg="wapabawama_ros" type="follower" output="screen">
       <param name="path_sub_name" value="la1/path"/>
       <param name="pose_pub_name" value="la1/set_pose"/>
+
       <param name="frame_name" value="la1"/>
       <param name="kp" value="0.05"/>
       <param name="integrator_max" value="0"/>
@@ -109,36 +112,7 @@
       <param name="lgv_fusion_ratio" value="$(arg path_integ)"/>
       <param name="path_x_max"       value="$(arg path_x_max)"/>
     </node>
-    <node name="watering_vl1" pkg="wapabawama_ros" type="watering" output="screen">
-      <param name="path_name"        value="la1/path"/>
-      <param name="frame_name" value="la1"/>
-      <param name="watering_mode" value="$(arg watering_mode)"/>
-      <param name="pwm_name"         value="valve1/pwm"/>
-      <param name="center_x"         value="0.01"/>
-      <param name="set_pwm"            value="$(arg set_valve_pwm)"/>
-      <param name="start_water_range" value="$(arg start_water_range)"/>
-      <param name="finish_water_range" value="$(arg finish_water_range)"/>
-    </node>
-    <node name="watering_vl2" pkg="wapabawama_ros" type="watering" output="screen">
-      <param name="path_name"        value="la2/path"/>
-      <param name="frame_name" value="la2"/>
-      <param name="watering_mode" value="$(arg watering_mode)"/>
-      <param name="pwm_name"         value="valve2/pwm"/>
-      <param name="center_x"         value="0.25"/>
-      <param name="set_pwm"            value="$(arg set_valve_pwm)"/>
-      <param name="start_water_range" value="$(arg start_water_range)"/>
-      <param name="finish_water_range" value="$(arg finish_water_range)"/> 
-    </node>
-    <node name="watering_vl3" pkg="wapabawama_ros" type="watering" output="screen">
-      <param name="path_name"        value="la3/path"/>
-      <param name="frame_name" value="la3"/>
-      <param name="watering_mode" value="$(arg watering_mode)"/>
-      <param name="pwm_name"         value="valve3/pwm"/>
-      <param name="center_x"         value="-0.22"/>
-      <param name="set_pwm"            value="$(arg set_valve_pwm)"/>    
-      <param name="start_water_range" value="$(arg start_water_range)"/>
-      <param name="finish_water_range" value="$(arg finish_water_range)"/>
-    </node>    
+
 
     <node name="record_1" pkg="wapabawama_ros" type="record_place">
       <param name="record_name"        value="la1/odem"/>
@@ -155,5 +129,5 @@
 
   </group>
 
-  <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find wapabawama_ros)/resources/rviz.rviz" />
+  <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find wapabawama_ros)/resources/rviz2.rviz" />
 </launch>
