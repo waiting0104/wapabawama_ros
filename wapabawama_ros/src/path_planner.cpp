@@ -200,7 +200,7 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "path_planner");
   Planner pn_;
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(20);
   while (ros::ok())
   {
     pn_.loop();

@@ -224,7 +224,7 @@ class Sort(object):
     self.iou_threshold = rospy.get_param("~iou_threshold", 0.3)
     self.subb = rospy.Subscriber(bbox_topic, BoundingBoxes, self.boxcallback)
     self.pubb = rospy.Publisher(tracked_bbox_topic, BoundingBoxes, queue_size=50)
-    self.rate = rospy.Rate(30)
+    self.rate = rospy.Rate(10)
     if display:
         img_topic = rospy.get_param('~img_topic', '/camera/image_raw')
         self.window_name = rospy.get_param('~window_name', 'image')
@@ -322,7 +322,7 @@ class Sort(object):
 if __name__ == '__main__':
     np.random.seed(8)
     colours = np.random.rand(31, 3) #used only for display
-    mot_tracker = Sort(max_age=200, min_hits=1) #create instance of the SORT tracker
+    mot_tracker = Sort(max_age=200, min_hits=3) #create instance of the SORT tracker
     count = 0 
     init_r = BoundingBoxes()
     for i in range(0,500):
@@ -357,24 +357,24 @@ if __name__ == '__main__':
                   count = rb.id
                 rb.Class = 'tracked'
                 r.bounding_boxes.append(rb)
-                if mot_tracker.img_in==1 and mot_tracker.display:
-                    res = trackers[d].astype(np.int32)
-                    rgb=colours[res[4]%31,:]*255
-                    cv2.rectangle(mot_tracker.img, (res[0],res[1]), (res[2],res[3]), (rgb[0],rgb[1],rgb[2]), 6)
-                    cv2.putText(mot_tracker.img, "ID : %d"%(res[4]), (res[0],res[1]), cv2.FONT_HERSHEY_COMPLEX, 2, (0 ,0 ,255), 5)
+                # if mot_tracker.img_in==1 and mot_tracker.display:
+                #     res = trackers[d].astype(np.int32)
+                #     rgb=colours[res[4]%31,:]*255
+                #     cv2.rectangle(mot_tracker.img, (res[0],res[1]), (res[2],res[3]), (rgb[0],rgb[1],rgb[2]), 6)
+                #     cv2.putText(mot_tracker.img, "ID : %d"%(res[4]), (res[0],res[1]), cv2.FONT_HERSHEY_COMPLEX, 2, (0 ,0 ,255), 5)
                 
             
-            if mot_tracker.img_in==1 and mot_tracker.display:
-                try : 
-                    # cv2.namedWindow(mot_tracker.window_name,0)
-                    # cv2.resizeWindow(mot_tracker.window_name,1920/2,1080/2)
+            # if mot_tracker.img_in==1 and mot_tracker.display:
+            #     try : 
+            #         # cv2.namedWindow(mot_tracker.window_name,0)
+            #         # cv2.resizeWindow(mot_tracker.window_name,1920/2,1080/2)
 
-                    mot_tracker.image = mot_tracker.bridge.cv2_to_imgmsg(mot_tracker.img, "bgr8")
-                    mot_tracker.image.header.stamp = rospy.Time.now()
-                    mot_tracker.pubimage.publish(mot_tracker.image)
+            #         # mot_tracker.image = mot_tracker.bridge.cv2_to_imgmsg(mot_tracker.img, "bgr8")
+            #         # mot_tracker.image.header.stamp = rospy.Time.now()
+            #         # mot_tracker.pubimage.publish(mot_tracker.image)
                     
-                except CvBridgeError as e:
-                    pass      
+            #     except CvBridgeError as e:
+            #         pass      
 
             cycle_time = time.time() - start_time
             if len(r.bounding_boxes)>0: #prevent empty box

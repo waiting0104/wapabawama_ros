@@ -95,7 +95,8 @@ class Follower{
 int main(int argc, char **argv) {
   ros::init(argc, argv, "follower");
   Follower fo_;
-  ros::Rate loop_rate(50);
+  // ros::Rate loop_rate(50);
+  ros::Rate loop_rate(30);
   while (ros::ok()) {
     fo_.loop();
     ros::spinOnce();

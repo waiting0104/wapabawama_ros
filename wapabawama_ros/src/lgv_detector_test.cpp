@@ -79,7 +79,7 @@ class LgvDetector{
   float _alpha, _beta, orig_cx, orig_cy, d, biasx, biasy;
   int box_y_limit;
   int box_expand;
-
+  int xx;
 public:
   LgvDetector() : it_(nh_) ,
                   tfListener(tfBuffer){
@@ -97,7 +97,7 @@ public:
     pn_.param<float>( "biasy",     biasy,     0 );
     pn_.param<int>( "box_y_limit", box_y_limit  ,     0 );
     pn_.param<int>( "box_expand", box_expand  ,     0 );
-
+    pn_.param<int>( "xx", xx  ,     0 );
     image_sub_ = std::make_shared<ImageSub>(it_, sub_image_topic, 1);
     bbox_sub_  = std::make_shared<BboxSub>( nh_, sub_bbox_topic , 10);
     sync       = std::make_shared<Syncr>( SyncPolicy( 10 ), *image_sub_, *bbox_sub_);
@@ -109,7 +109,8 @@ public:
     image_pub_ = it_.advertise(pub_img_topic, 1);
 
 #ifdef CV_SHOW
-    cv::namedWindow(OPENCV_WINDOW);
+    cv::namedWindow(OPENCV_WINDOW,cv::WINDOW_NORMAL);
+    cv::resizeWindow(OPENCV_WINDOW, 1980 / 2, 1080 / 2);
 #endif // CV_SHOW
 
   }
@@ -176,9 +177,7 @@ public:
       /* quat_tf.setRPY(0,0,atan2(tf_vec.y, tf_vec.x) ); */
       quat_tf.setRPY(0,0,atan2(tf_vec.y, -tf_vec.x) );
       quat_tf.normalize();
-
-
-      // float angle = atan2(2 * (quat_tf.x()*quat_tf.y() + quat_tf.w()*quat_tf.z()), quat_tf.w()*quat_tf.w() + quat_tf.x()*quat_tf.x() - quat_tf.y()*quat_tf.y() - quat_tf.z()*quat_tf.z());
+    
       lgv_msg_tracked.pose.orientation = tf2::toMsg(quat_tf); 
       lgv_msg_tracked.pose.position.x = tf_cen.x + gantry_x + biasx;
       lgv_msg_tracked.pose.position.y = tf_cen.y + gantry_y + biasy;
@@ -191,6 +190,7 @@ public:
       cv::rectangle(cv_ptr->image, new_roi, cv::Scalar(0,0,255), 3);
       auto p1 = cv::Point(cx+vx*vec_size, cy+vy*vec_size);
       auto p2 = cv::Point(cx-vx*vec_size, cy-vy*vec_size);
+
       cv::line(cv_ptr->image, p1, p2, cv::Scalar(0,0,200), 3, 4);
     }
 

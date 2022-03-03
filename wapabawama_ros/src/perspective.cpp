@@ -37,7 +37,7 @@ cv::Point2d tf_persp_vec(cv::Point2d src, float* M_) {
 
 cv::Point2d tf_persp_v2(cv::Point2d src, float alpha, float cx, float cy, float d) {
     cv::Point2d res;
-    res.x = alpha * (src.x)-cx;
+    res.x = alpha * (src.x-cx);
     res.y = alpha * (cy - src.y) + d;
     return res;
 }

@@ -85,15 +85,15 @@ void set_gantryspeedCallback(const std_msgs::Float32::ConstPtr& msg) {
 }
 void set_valve1_pwmCallback(const std_msgs::Int8::ConstPtr& msg) {
   valve1_pwm = msg->data;
-  // ROS_INFO("Valve1 pwm set to %d", valve1_pwm);
+  ROS_INFO("Valve1 pwm set to %d", valve1_pwm);
 }
 void set_valve2_pwmCallback(const std_msgs::Int8::ConstPtr& msg) {
   valve2_pwm = msg->data;
-  // ROS_INFO("Valve2 pwm set to %d", valve2_pwm);
+  ROS_INFO("Valve2 pwm set to %d", valve2_pwm);
 }
 void set_valve3_pwmCallback(const std_msgs::Int8::ConstPtr& msg) {
   valve3_pwm = msg->data;
-  // ROS_INFO("Valve3 pwm set to %d", valve3_pwm);
+  ROS_INFO("Valve3 pwm set to %d", valve3_pwm);
 }
 int main(int argc, char **argv) {
   ros::init(argc, argv, "set_command");

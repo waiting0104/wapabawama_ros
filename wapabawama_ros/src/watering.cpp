@@ -21,33 +21,32 @@ watering_mode : 1 is keep watering mode
                 */
 class Valve
 {
+    ros::NodeHandle nh_;
     std::string path_name;
     std::string frame_name;
     std::string pwm_name;
     std::string gantry_speed_name = "gantry/set_speed";
+    ros::Subscriber lgvs_sub;
+
+    ros::Time current_stopping_time, ini_stopping_time;
+    tf2_ros::Buffer tfBuffer;
+    tf2_ros::TransformListener tfListener;
+    std_msgs::Float32 gantry_speed;
+    geometry_msgs::PoseArray lgvs_record;
+    int watering_mode;
+    int set_pwm;
+    int stop_sec;
+    float bias;
     float center_x;          // Path center
     float lgv_dist_range;    // Distance from center_x that make thix lgv avaliable
     float start_water_range; // Distance that lgv can modify path
     float finish_water_range;
     float set_gantry_speed;
-    bool stop_sign = false;
-    ros::Subscriber lgvs_sub;
-    ros::Publisher valve_pwm_pub;
-    ros::Publisher gantry_speed_pub;
-    ros::NodeHandle nh_;
-    tf2_ros::Buffer tfBuffer;
-    tf2_ros::TransformListener tfListener;
-    ros::Time current_stopping_time, ini_stopping_time;
-    geometry_msgs::PoseArray lgvs_record;
-
+    bool water_sign = false; 
 public:
     std_msgs::Int8 valve_pwm;
-    std_msgs::Float32 gantry_speed;
-    int watering_mode;
-    int last_pwm;
-    int last_speed;
-    int set_pwm;
-    int stop_sec;
+    ros::Publisher valve_pwm_pub;
+    ros::Publisher gantry_speed_pub;
     Valve() : tfListener(tfBuffer)
     {
         ros::NodeHandle pn_("~");
@@ -58,7 +57,8 @@ public:
         pn_.param<int>("watering_mode", watering_mode, 4);
         pn_.param<float>("center_x", center_x, 0);
         pn_.param<int>("set_pwm", set_pwm, 50);
-        pn_.param<int>("stop_sec", stop_sec, 5);
+        pn_.param<int>("stop_sec", stop_sec, 2);
+        pn_.param<float>("bias", bias, 0);
         pn_.param<float>("set_gantry_speed", set_gantry_speed, 0.3);
         pn_.param<float>("lgv_dist_range", lgv_dist_range, 0.1);
         pn_.param<float>("start_water_range", start_water_range, 0.08);
@@ -67,42 +67,47 @@ public:
         gantry_speed_pub = nh_.advertise<std_msgs::Float32>(gantry_speed_name, 10);
         lgvs_sub = nh_.subscribe("lgvs_record", 10, &Valve::lgvsCallback, this);
     }
-
+    ~Valve(){
+        close();
+    }
     void lgvsCallback(const geometry_msgs::PoseArray::ConstPtr &msg)
     {
-        lgvs_record = *msg;
+        lgvs_record = * msg;
 
         // std::cout<<"la_x:"<<la_x<<std::endl;
         // std::cout<<"la_y:"<<la_y<<std::endl;
     }
-    // stop gantry for t sec
-    void stop(int t)
-    {
-        std::cout << "stop!" << std::endl;
-        gantry_speed.data = 0;
-        gantry_speed_pub.publish(gantry_speed);
-        valve_pwm.data = set_pwm;
-        ini_stopping_time = ros::Time::now();
-        while (1)
-        {
-
-            current_stopping_time = ros::Time::now();
-            int timer = (current_stopping_time - ini_stopping_time).toSec();
-            if (timer > t)
-            {
-                gantry_speed.data = set_gantry_speed;
-                gantry_speed_pub.publish(gantry_speed);
-                break;
-            }
-        }
-    }
+    
     void open(){
         valve_pwm.data = set_pwm;
         valve_pwm_pub.publish(valve_pwm);
     }
     void close(){
         valve_pwm.data = 0;
-        valve_pwm_pub.publish(valve_pwm);   
+        valve_pwm_pub.publish(valve_pwm);
+    }
+    void stop_gantry(){
+        gantry_speed.data = 0;
+        gantry_speed_pub.publish(gantry_speed);
+    }
+    void stop(int t){
+        std::cout << "stop!" << std::endl;
+        stop_gantry();
+        open();
+        ini_stopping_time = ros::Time::now();
+        while (1)
+        {   
+            current_stopping_time = ros::Time::now();
+            int timer = (current_stopping_time - ini_stopping_time).toSec();
+            if (timer > t)
+            {   
+                close();
+                ros::Duration(1.5).sleep();
+                gantry_speed.data = set_gantry_speed;
+                gantry_speed_pub.publish(gantry_speed);
+                break;
+            }
+        }        
     }
     void loop()
     {
@@ -131,11 +136,12 @@ public:
                 switch (watering_mode)
                 {
                 case 1:
-                    if (la_y > lgv.position.y - start_water_range && la_y < lgv.position.y + finish_water_range)
+                    if (!water_sign)
                     {
                         // auto q = lgv.pose.orientation;
                         // float angle = atan2(2 * (q.x * q.y + q.w * q.z), q.w * q.w + q.x * q.x - q.y * q.y - q.z * q.z);
-                        valve_pwm.data = set_pwm;
+                        open();
+                        water_sign = true;
                     }
                     break;
                 case 2:
@@ -143,19 +149,19 @@ public:
                     {
                         // auto q = lgv.pose.orientation;
                         // float angle = atan2(2 * (q.x * q.y + q.w * q.z), q.w * q.w + q.x * q.x - q.y * q.y - q.z * q.z);
-                        open();
+                        valve_pwm.data = set_pwm;
                     }
                     else
-                        close();
+                        valve_pwm.data = 0;
                     break;
                 case 3:
-                    // if (frame_name == "la2")
-                    // {
-                    //     std::cout << "lgv.position.y:" << int(1000 * lgv.position.y) << std::endl;
-                    //     std::cout << frame_name << ":" << int(1000 * la_y) << std::endl;
-                    // }
+                    if(frame_name=="la2"){
+                        std::cout << "lgv.position.y:" << round(abs(10000*(la_y-lgv.position.y-bias)))<< std::endl;
+                        // std::cout << frame_name << ":"<<10000*la_y << std::endl;
+                    }
 
-                    if (int(1000 * la_y) == int(1000 * lgv.position.y)) // if gantry is on top of orchid , stop for 3 sec to water
+
+                    if (round(abs(10000*(la_y-lgv.position.y-bias)))<=11 ) // if gantry is on top of orchid , stop for 3 sec to water
                     {
                         stop(stop_sec);
                     }
@@ -164,19 +170,13 @@ public:
                     gantry_speed.data = 0;
                     gantry_speed_pub.publish(gantry_speed);
                     valve_pwm.data = 0;
+                default:
+                    break;
                 }
+                
             }
         }
-        // if (valve_pwm.data != last_pwm)
-        // {
-        //     valve_pwm_pub.publish(valve_pwm);
-        // }
-        // if (gantry_speed.data != last_speed)
-        // {
-        //     gantry_speed_pub.publish(gantry_speed);
-        // }
-        // last_pwm = valve_pwm.data;
-        // last_speed = gantry_speed.data;
+ 
     }
 };
 
@@ -193,14 +193,20 @@ int main(int argc, char **argv)
 
         current_time = ros::Time::now();
         int dt = (current_time - ini_time).toSec();
-        if (dt == 2)
-        {
-            vl.open();
-        }
-        if (dt == 4)
-        {
-            vl.close();
-        }
+        // if (dt == 2)
+        // {
+        //     vl.valve_pwm.data = 100;
+        //     vl.valve_pwm_pub.publish(vl.valve_pwm);
+        // }
+        // if (dt == 3)
+        // {
+        //     vl.valve_pwm.data = 0;
+        //     vl.valve_pwm_pub.publish(vl.valve_pwm);
+        // }
+        // if (dt == 25)
+        // {
+        //     vl.watering_mode = 4;
+        // }
 
         ros::spinOnce();
         vl.loop();
