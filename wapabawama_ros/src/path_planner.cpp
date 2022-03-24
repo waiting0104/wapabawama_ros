@@ -97,17 +97,22 @@ public:
   {
     for (auto &lgv : msg->poses)
     {
+
       if (abs(lgv.position.x - center_x) < lgv_dist_range)
       {
+
         auto last_y = la_path.poses.back().pose.position.y;
         if (lgv.position.y < last_y)
         {
+
           // Only if lgv in this range will be done
           auto q = lgv.orientation;
           float angle = atan2(2 * (q.x * q.y + q.w * q.z), q.w * q.w + q.x * q.x - q.y * q.y - q.z * q.z);
           /* angle = boost::algorithm::clamp(angle, 0.5, 2.64); */
-          if (angle < 0.2 && angle > -0.2)
-            continue;
+          // if (angle < 0.2 && angle > -0.2)
+          // {std::cout << "FUCK" << std::endl;
+          //   continue;
+          // }
 
           lgv_main(
               lgv.position.x,
@@ -176,7 +181,6 @@ public:
     {
       // Always push more point to path so that back - now > y_max
       float gantry_y = transformStamped.transform.translation.y;
-
 
       auto last_y = la_path.poses.back().pose.position.y;
       while (last_y - gantry_y < max_y)

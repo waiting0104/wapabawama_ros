@@ -14,12 +14,14 @@
 #include <tf2_ros/transform_listener.h>
 #include <memory>
 #include <string>
-
+#include <unordered_map>
 std::string sub_lgvs_topic_left;
 std::string sub_lgvs_topic_right;
 std::string pub_lgvs_topic;
 geometry_msgs::PoseArray lgvs_record_left;
 geometry_msgs::PoseArray lgvs_record_right;
+std::unordered_map<int,geometry_msgs::Pose> lgvs_map_left;
+std::unordered_map<int,geometry_msgs::Pose> lgvs_map_right;
 int left_record_limit;
 int right_record_limit;
 void left_lgvs_Callback(const wapabawama_ros::lgvs::ConstPtr &msg)
@@ -27,53 +29,37 @@ void left_lgvs_Callback(const wapabawama_ros::lgvs::ConstPtr &msg)
 
     for (auto &lgv : msg->lgvs)
     {
-        // std::cout << "left:" << lgv.pose.position.x << std::endl;
+        std::cout << "left:" << lgv.pose.position.x << std::endl;
         if (lgv.pose.position.x <= left_record_limit)
-        {
-            if (lgv.ID > lgvs_record_left.poses.size())
-            { // add vector capacity when new object be tracked
-                lgvs_record_left.poses.resize(lgv.ID);
-                lgvs_record_left.poses.at(lgv.ID - 1) = lgv.pose;
-                // std::cout << "1:" << lgv << std::endl;
-            }
-
-            else
-            {
+        {   
+            // add vector capacity when new object be tracked
+            if (lgvs_map_left.count(lgv.ID)){ 
                 if (lgv.count == 1)
                 {
-                    lgvs_record_left.poses.at(lgv.ID - 1) = lgv.pose;
-                    // std::cout << "2:" << lgv << std::endl;
+                    lgvs_map_left[lgv.ID] = lgv.pose;
                 }
                 else
-                { //Pose fusion
+                {   
                     int n = lgv.count;
-                    // std::cout << "3:" << lgv << std::endl;
-                    if (lgvs_record_left.poses.at(lgv.ID - 1).position.y != 0)
+                    lgvs_map_left[lgv.ID].position.x = (lgvs_map_left[lgv.ID].position.x * (n - 1) + lgv.pose.position.x) / n;
+                    lgvs_map_left[lgv.ID].position.y = (lgvs_map_left[lgv.ID].position.y * (n - 1) + lgv.pose.position.y) / n;
+                    auto q_old = lgvs_map_left[lgv.ID].orientation;
+                    auto q_new = lgv.pose.orientation;
+                    float angle_old = atan2(2 * (q_old.w * q_old.z), q_old.w * q_old.w - q_old.z * q_old.z);
+                    float angle_new = atan2(2 * (q_new.w * q_new.z), q_new.w * q_new.w - q_new.z * q_new.z);
+                    if (abs(angle_new - angle_old) < 2.5)
                     {
-                        lgvs_record_left.poses.at(lgv.ID - 1).position.x = (lgvs_record_left.poses.at(lgv.ID - 1).position.x * (n - 1) + lgv.pose.position.x) / n;
-                        lgvs_record_left.poses.at(lgv.ID - 1).position.y = (lgvs_record_left.poses.at(lgv.ID - 1).position.y * (n - 1) + lgv.pose.position.y) / n;
-                        auto q_old = lgvs_record_left.poses.at(lgv.ID - 1).orientation;
-                        auto q_new = lgv.pose.orientation;
-                        float angle_old = atan2(2 * (q_old.w * q_old.z), q_old.w * q_old.w - q_old.z * q_old.z);
-                        float angle_new = atan2(2 * (q_new.w * q_new.z), q_new.w * q_new.w - q_new.z * q_new.z);
-                        if (abs(angle_new - angle_old) < 2.5)
-                        {
-                            angle_old = (angle_old * (n - 1) + angle_new) / n;
-                        }
-                        else
-                        {
-                            angle_old = angle_new;
-                        }
-                        tf2::Quaternion quat_tf;
-                        quat_tf.setRPY(0, 0, angle_old);
-                        quat_tf.normalize();
-                        lgvs_record_left.poses.at(lgv.ID - 1).orientation = tf2::toMsg(quat_tf);
+                        angle_old = (angle_old * (n - 1) + angle_new) / n;
                     }
                     else
                     {
-                        lgvs_record_left.poses.at(lgv.ID - 1) = lgv.pose;
-                    }
+                        angle_old = angle_new;
+                    }   
                 }
+            }
+            else
+            {
+                lgvs_map_left[lgv.ID] = lgv.pose;
             }
         }
     }
@@ -83,50 +69,37 @@ void right_lgvs_Callback(const wapabawama_ros::lgvs::ConstPtr &msg)
 
     for (auto &lgv : msg->lgvs)
     {
-        // std::cout << "right:" << lgv.pose.position.x << std::endl;
+        std::cout << "right:" << lgv.pose.position.x << std::endl;
         if (lgv.pose.position.x >= right_record_limit)
-        {
-            if (lgv.ID > lgvs_record_right.poses.size())
-            { // add vector capacity when new object be tracked
-                lgvs_record_right.poses.resize(lgv.ID);
-                lgvs_record_right.poses.at(lgv.ID - 1) = lgv.pose;
-            }
-
-            else
-            {
+        {   
+            // add vector capacity when new object be tracked
+            if (lgvs_map_right.count(lgv.ID)){ 
                 if (lgv.count == 1)
                 {
-                    lgvs_record_right.poses.at(lgv.ID - 1) = lgv.pose;
+                    lgvs_map_right[lgv.ID] = lgv.pose;
                 }
                 else
-                { //Pose fusion
+                {   
                     int n = lgv.count;
-                    if (lgvs_record_right.poses.at(lgv.ID - 1).position.y != 0)
+                    lgvs_map_right[lgv.ID].position.x = (lgvs_map_right[lgv.ID].position.x * (n - 1) + lgv.pose.position.x) / n;
+                    lgvs_map_right[lgv.ID].position.y = (lgvs_map_right[lgv.ID].position.y * (n - 1) + lgv.pose.position.y) / n;
+                    auto q_old = lgvs_map_right[lgv.ID].orientation;
+                    auto q_new = lgv.pose.orientation;
+                    float angle_old = atan2(2 * (q_old.w * q_old.z), q_old.w * q_old.w - q_old.z * q_old.z);
+                    float angle_new = atan2(2 * (q_new.w * q_new.z), q_new.w * q_new.w - q_new.z * q_new.z);
+                    if (abs(angle_new - angle_old) < 2.5)
                     {
-                        lgvs_record_right.poses.at(lgv.ID - 1).position.x = (lgvs_record_right.poses.at(lgv.ID - 1).position.x * (n - 1) + lgv.pose.position.x) / n;
-                        lgvs_record_right.poses.at(lgv.ID - 1).position.y = (lgvs_record_right.poses.at(lgv.ID - 1).position.y * (n - 1) + lgv.pose.position.y) / n;
-                        auto q_old = lgvs_record_right.poses.at(lgv.ID - 1).orientation;
-                        auto q_new = lgv.pose.orientation;
-                        float angle_old = atan2(2 * (q_old.w * q_old.z), q_old.w * q_old.w - q_old.z * q_old.z);
-                        float angle_new = atan2(2 * (q_new.w * q_new.z), q_new.w * q_new.w - q_new.z * q_new.z);
-                        if (abs(angle_new - angle_old) < 2.5)
-                        {
-                            angle_old = (angle_old * (n - 1) + angle_new) / n;
-                        }
-                        else
-                        {
-                            angle_old = angle_new;
-                        }
-                        tf2::Quaternion quat_tf2;
-                        quat_tf2.setRPY(0, 0, angle_old);
-                        quat_tf2.normalize();
-                        lgvs_record_right.poses.at(lgv.ID - 1).orientation = tf2::toMsg(quat_tf2);
+                        angle_old = (angle_old * (n - 1) + angle_new) / n;
                     }
                     else
                     {
-                        lgvs_record_right.poses.at(lgv.ID - 1) = lgv.pose;
-                    }
+                        angle_old = angle_new;
+                    }   
                 }
+            }
+            else
+            {
+                lgvs_map_right[lgv.ID] = lgv.pose;
             }
         }
     }
@@ -160,16 +133,15 @@ int main(int argc, char **argv)
         int orchid_count;
         orchid_count = lgvs_record_left.poses.size() + lgvs_record_right.poses.size();
 
-        if (!lgvs_record_left.poses.empty())
-        {
-            lgvs_record.poses.insert(lgvs_record.poses.end(), lgvs_record_left.poses.begin(), lgvs_record_left.poses.end());
+        for(const auto& lgv :lgvs_map_left){
+            lgvs_record.poses.push_back(lgv.second);
         }
-        if (!lgvs_record_right.poses.empty())
-        {
-            lgvs_record.poses.insert(lgvs_record.poses.end(), lgvs_record_right.poses.begin(), lgvs_record_right.poses.end());
+        for(const auto& lgv :lgvs_map_right){
+            lgvs_record.poses.push_back(lgv.second);
         }
         lgvs_record.header.stamp = ros::Time::now();
         lgvs_record.header.frame_id = "map";
+        // std::cout<<lgvs_record;
         lgvs_pub.publish(lgvs_record);
 
         ros::spinOnce();

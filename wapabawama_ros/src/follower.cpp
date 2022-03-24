@@ -85,7 +85,7 @@ class Follower{
       pub_pose_.data = follow_x - orig;
 
       /* ROS_INFO("%f %f %f %f", integrator, follow_x, la_x, pub_pose_.data); */
-
+      // std::cout<<pose_pub_name<<"="<<pub_pose_.data<<std::endl;
       pose_pub.publish(pub_pose_);
     }
   }
