@@ -1,0 +1,15 @@
+<launch>
+  
+  <include file="$(find wapabawama_ros)/launch/detect_test.launch">
+    <!-- <arg name="network_param_file" default="$(find darknet_ros)/config/lab_orchid_v4.yaml"/> -->
+  </include>
+  <!-- wapabawama_ros -->
+  
+    <node name="SORT_left" pkg="wapabawama_ros" type="sort.py" output="screen">
+        <param name="img_topic" value="camera/image_raw" />
+        <param name="bbox" value="/darknet_ros/bounding_boxes" />
+        <param name="tracked_bbox" value="/darknet_ros/tracked_boxes" />
+        <param name="window_name" value="left_window" />
+    </node>
+  <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find wapabawama_ros)/resources/rviz2.rviz" />
+</launch>

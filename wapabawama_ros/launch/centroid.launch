@@ -1,67 +1,65 @@
 <launch>
   <arg name="maxDisappeared"         default="10" />
   <arg name="path_integ"         default="0.1" />
-  <arg name="effect_x_range"         default="0.115" />
-  <arg name="effect_y_range"         default="0.15" />
+  <arg name="effect_x_range"         default="0.12" />
+  <arg name="effect_y_range"         default="0.08" />
   <arg name="start_water_range"         default="0.15" />
   <arg name="finish_water_range"         default="0.07" />
   <arg name="path_x_max"         default="0.2" />
-  <arg name="set_valve_pwm"         default="50" />
+  <arg name="set_valve_pwm"         default="40" />
+  <arg name="stop_sec"         default="2" />
   <arg name="watering_mode"         default="3" />  
   <arg name="bias"         default="3" /> 
+  <arg name="set_gantry_speed"         default="0.3" /> 
+  
   <include file="$(find wapabawama_ros)/launch/detect.launch">
     <!-- <arg name="network_param_file" default="$(find darknet_ros)/config/lab_orchid_v4.yaml"/> -->
   </include>
-  <include file="$(find wapabawama_ros)/launch/tf.launch"/>
+  <!-- <include file="$(find wapabawama_ros)/launch/tf.launch"/> -->
 
   <!-- wapabawama_ros -->
   <group ns="wapabawama_ros">
-    <include file="$(find wapabawama_ros)/launch/move.launch"/>
-    <node name="SORT_left" pkg="wapabawama_ros" type="sort.py" output="screen">
+    <!-- <include file="$(find wapabawama_ros)/launch/move.launch"/> -->
+    <!-- <node name="centroid_left" pkg="wapabawama_ros" type="centroid.py" output="screen">
         <param name="img_topic" value="/stereo/left/image_raw" />
         <param name="bbox" value="/left_camera/darknet_ros/bounding_boxes" />
         <param name="tracked_bbox" value="/left_camera/tracked_boxes" />
         <param name="window_name" value="left_window" />
-    </node>
-    <node name="SORT_right" pkg="wapabawama_ros" type="sort.py" output="screen">
-        <param name="img_topic" value="/stereo/right/image_raw" />
+    </node> -->
+    <node name="centroid_right" pkg="wapabawama_ros" type="object_tracker.py" output="screen">
+        <param name="img_topic" value="/right_camera/darknet_ros/detection_image" />
         <param name="bbox" value="/right_camera/darknet_ros/bounding_boxes" />
         <param name="tracked_bbox" value="/right_camera/tracked_boxes" />
         <param name="window_name" value="right_window" />
     </node>
     <!-- Detect Lgv -->
-    <node name="lgv_detector_left" pkg="wapabawama_ros" type="lgv_detector_test" output="screen">
+    <!-- <node name="lgv_detector_left" pkg="wapabawama_ros" type="lgv_detector_test" output="screen">
       <param name="image" value="/stereo/left/image_raw" />
       <param name="bbox" value="/left_camera/tracked_boxes" />
       <param name="pub_lgvs_topic" value="/left/lgvs_tracked" />
       <param name="pub_img_topic" value="/left/pose_img" />
-      <param name="alpha" value="191" />
+      <param name="alpha" value="206" />
       <param name="beta" value="1000" />
-      <param name="cx" value="1750" />
+      <param name="cx" value="1685" />
       <param name="cy" value="425" />
-      <param name="d" value="320" />
+      <param name="d" value="340" />
       <param name="box_expand" value="30" />
-    </node>
-    <node name="lgv_detector_right" pkg="wapabawama_ros" type="lgv_detector_test" output="screen">
+    </node> -->
+    <!-- <node name="lgv_detector_right" pkg="wapabawama_ros" type="lgv_detector_test" output="screen">
       <param name="image" value="/stereo/right/image_raw" />
       <param name="bbox" value="/right_camera/tracked_boxes" />
       <param name="pub_lgvs_topic" value="/right/lgvs_tracked" />
       <param name="pub_img_topic" value="/right/pose_img" />
-      <param name="alpha" value="192" />
+      <param name="alpha" value="206" />
       <param name="beta" value="1000" />  
-      <param name="cx" value="0" />
+      <param name="cx" value="40" />
       <param name="cy" value="385" />
-      <param name="d" value="320" />
-      <param name="biasx" value="0.02" />
+      <param name="d" value="340" />
       <param name="box_expand" value="30" />
-    </node>
+    </node> -->
     <!-- Record Lgvs -->
-    <node name="lgv_recorder" pkg="wapabawama_ros" type="lgv_recorder" output="screen">
-      <param name="pub_lgvs_topic" value="lgvs_record" />
-      <param name="left_record_limit" value="0.007788 " />
-      <param name="right_record_limit" value="0.035787" />
-    </node>
+    
   </group>
 
-  <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find wapabawama_ros)/resources/rviz2.rviz" />
+  <!-- <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find wapabawama_ros)/resources/rviz2.rviz" /> -->
 </launch>

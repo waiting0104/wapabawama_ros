@@ -29,7 +29,7 @@ void left_lgvs_Callback(const wapabawama_ros::lgvs::ConstPtr &msg)
 
     for (auto &lgv : msg->lgvs)
     {
-        std::cout << "left:" << lgv.pose.position.x << std::endl;
+        // std::cout << "left:" << lgv.pose.position.x << std::endl;
         if (lgv.pose.position.x <= left_record_limit)
         {   
             // add vector capacity when new object be tracked
@@ -69,7 +69,7 @@ void right_lgvs_Callback(const wapabawama_ros::lgvs::ConstPtr &msg)
 
     for (auto &lgv : msg->lgvs)
     {
-        std::cout << "right:" << lgv.pose.position.x << std::endl;
+        // std::cout << "right:" << lgv.pose.position.x << std::endl;
         if (lgv.pose.position.x >= right_record_limit)
         {   
             // add vector capacity when new object be tracked

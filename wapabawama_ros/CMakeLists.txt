@@ -66,6 +66,7 @@ add_message_files(
   FILES
   lgv.msg
   lgvs.msg
+  moisture.msg
   # Message2.msg
 )
 ## Generate services in the 'srv' folder
@@ -171,6 +172,7 @@ add_executable(tf_la             src/tf_la.cpp)
 add_executable(tf_map            src/tf_map.cpp)
 add_executable(record_place      src/record_place.cpp)
 
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -193,6 +195,7 @@ add_dependencies(tf_la             ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_
 add_dependencies(tf_map            ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(record_place      ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+
 # add_dependencies(pwm              ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
 target_link_libraries(lgv_detector      ${catkin_LIBRARIES})
@@ -211,12 +214,18 @@ target_link_libraries(record_place      ${catkin_LIBRARIES})
 
 
 
+
+
+
 # target_link_libraries(pwm           ${catkin_LIBRARIES} system)
 if(OpenCV_FOUND)
     target_include_directories(lgv_detector PUBLIC ${OpenCV_INCLUDE_DIRS})
     target_link_libraries(lgv_detector ${OpenCV_LIBS})
     target_include_directories(lgv_detector_test PUBLIC ${OpenCV_INCLUDE_DIRS})
     target_link_libraries(lgv_detector_test ${OpenCV_LIBS})
+
+
+  
   
 endif()
 
@@ -230,7 +239,7 @@ endif()
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
-  scripts/set_gantry_speed.py  scripts/set_valve_pwm.py scripts/sort.py
+  scripts/set_gantry_speed.py  scripts/set_valve_pwm.py scripts/sort.py scripts/object_tracker.py scripts/LoRa/Lora_recieve.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

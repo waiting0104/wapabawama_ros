@@ -2,7 +2,7 @@
 
   <!-- Gantry Tf -->
   <node name="tf_map" pkg="wapabawama_ros" type="tf_map"/>
-  <node name="tf_gantry" pkg="pabawama_ros" type="tf_gantry" output="screen">
+  <node name="tf_gantry" pkg="wapabawama_ros" type="tf_gantry" output="screen">
     <param name="gantry_name" value="gantry" />
     <param name="header_name" value="/world" />
   </node>

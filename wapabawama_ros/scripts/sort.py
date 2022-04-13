@@ -252,7 +252,8 @@ class Sort(object):
     if self.display:
         try : 
             self.img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
-            
+            # cv2.imshow("right", self.img)
+            # cv2.waitKey(3) 
         except CvBridgeError as e:
             pass
     self.img_in = 1
@@ -383,7 +384,7 @@ if __name__ == '__main__':
                 # cv2.waitKey(3)
                 r.header.stamp = rospy.Time.now()
                 mot_tracker.pubb.publish(r)
-                # print(cycle_time)
+            # print(cycle_time)
                 
             mot_tracker.rate.sleep()
 

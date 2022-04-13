@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <launch>
 
-  <include file="$(find spinnaker_camera_driver)/launch/camera.launch">
-  </include>
+
+  <node name="movie" pkg="wapabawama_ros" type="movie" output="screen">
+  </node>
   <!-- Yolov4 -->
   <arg name="image"         default="/camera/image_raw" />
   <!-- Console launch prefix -->  
@@ -21,7 +22,7 @@
   <rosparam command="load" ns="darknet_ros"  file="$(arg ros_param_file)"/>
   <rosparam command="load" ns="darknet_ros"  file="$(arg network_param_file)"/>
 
-  <!-- Start darknet and ros wrapper -->
+  <!-- Start darknet and ros wrapper -->  
   <node pkg="darknet_ros" type="darknet_ros" name="darknet_ros" output="log" launch-prefix="$(arg launch_prefix)">
     <param name="weights_path"          value="$(arg yolo_weights_path)" />
     <param name="config_path"           value="$(arg yolo_config_path)" />
