@@ -51,6 +51,7 @@ class Valve
     std::vector<float> moisture_y;
     std::vector<float> amount_list;
     std::vector<float> flow_list;
+    std::vector<int> amount_level; 
     bool water_sign = false; 
 public:
     int set_pwm,high_first,high_second,medium,low_second,low_first;
@@ -69,17 +70,13 @@ public:
         pn_.param<int>("watering_mode", watering_mode, 4);
         pn_.param<float>("center_x", center_x, 0);
         pn_.param<int>("set_pwm", set_pwm, 50);
-        pn_.param<int>("high_first", high_first, 90);
-        pn_.param<int>("high_second", high_second, 75);
-        pn_.param<int>("medium", medium, 60);
-        pn_.param<int>("low_second", low_second, 45);
-        pn_.param<int>("low_first", low_first, 30);
         pn_.param<float>("bias", bias, 0);
         pn_.param<float>("set_gantry_speed", set_gantry_speed, 0.3);
         pn_.param<float>("lgv_dist_range", lgv_dist_range, 0.12);
         pn_.param<float>("start_water_range", start_water_range, 0.08);
         pn_.param<float>("finish_water_range", finish_water_range, 0.08);
-        pn_.getParam("amount_list", amount_list);
+        pn_.getParam("amount_list", amount_list);//amount per 10 duty cycle 
+        pn_.getParam("amount_level", amount_level); //amount of different soil moisture 
         pn_.getParam("flow_list", flow_list);
         pn_.getParam("moisture_x", moisture_x);
         pn_.getParam("moisture_y", moisture_y);
@@ -189,25 +186,25 @@ public:
     }
     int amount_by_moisture(float moisture){
         if(moisture<=20){
-            return high_first;
+            return amount_level[0];
         }
         else if (moisture>20&&moisture<=40){
-            return high_second;
+            return amount_level[1];
         }
         else if (moisture>40&&moisture<=60){
-            return medium;
+            return amount_level[2];
         }
         else if (moisture>60&&moisture<=80){
-            return low_second;
+            return amount_level[3];
         }
         else if (moisture>80){
-            return low_first;
+            return amount_level[4];
         }
     }
 
     void loop()
     {   
-
+     
         geometry_msgs::TransformStamped transformStamped;
         try
         {
