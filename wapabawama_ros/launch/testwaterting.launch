@@ -5,8 +5,9 @@
   <arg name="effect_y_range"         default="0.15" />
   <arg name="start_water_range"         default="0.15" />
   <arg name="finish_water_range"         default="0.07" />
-  <arg name="path_x_max"         default="0.2" />
-  <arg name="set_valve_pwm"         default="50" />
+  <arg name="path_x_max"         default="0.2" 
+  />
+  <arg name="set_valve_pwm"         default="100"/>
   <arg name="watering_mode"         default="4" />  
   <arg name="bias"         default="3" /> 
 
@@ -14,7 +15,7 @@
   <group ns="wapabawama_ros">
     <include file="$(find wapabawama_ros)/launch/move.launch"/>
     
-    <node name="watering_vl1" pkg="wapabawama_ros" type="watering" output="screen">
+    <!-- <node name="watering_vl1" pkg="wapabawama_ros" type="watering" output="screen">
       <param name="path_name"        value="la1/path"/>
       <param name="frame_name" value="la1"/>
       <param name="watering_mode" value="$(arg watering_mode)"/>
@@ -25,8 +26,8 @@
       <param name="set_pwm"            value="$(arg set_valve_pwm)"/>
       <param name="start_water_range" value="$(arg start_water_range)"/>
       <param name="finish_water_range" value="$(arg finish_water_range)"/>
-    </node>
-    <node name="watering_vl2" pkg="wapabawama_ros" type="watering" output="screen">
+    </node> -->
+    <!-- <node name="watering_vl2" pkg="wapabawama_ros" type="watering" output="screen">
       <param name="path_name"        value="la2/path"/>
       <param name="frame_name" value="la2"/>
       <param name="watering_mode" value="$(arg watering_mode)"/>
@@ -37,7 +38,7 @@
       <param name="set_pwm"            value="$(arg set_valve_pwm)"/>
       <param name="start_water_range" value="$(arg start_water_range)"/>
       <param name="finish_water_range" value="$(arg finish_water_range)"/> 
-    </node>
+    </node> -->
     <node name="watering_vl3" pkg="wapabawama_ros" type="watering" output="screen">
       <param name="path_name"        value="la3/path"/>
       <param name="frame_name" value="la3"/>
@@ -46,6 +47,7 @@
       <param name="bias"         value="0.04"/>   
       <param name="pwm_name"         value="valve3/pwm"/>
       <param name="center_x"         value="-0.22"/>
+      <rosparam param="amount_list">[0,3.4,14,29,41,50,64,74,82,90,95]</rosparam>
       <param name="set_pwm"            value="$(arg set_valve_pwm)"/>    
       <param name="start_water_range" value="$(arg start_water_range)"/>
       <param name="finish_water_range" value="$(arg finish_water_range)"/>

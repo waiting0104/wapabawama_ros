@@ -37,7 +37,7 @@ def quit(signum, frame):
 class LoRaGateWay(LoRa):
     def __init__(self, verbose=False):
         rospy.init_node('lora', anonymous=True)
-        self.pubb = rospy.Publisher("/moisture", moisture, queue_size=10)
+        self.pubb = rospy.Publisher("/moisture", moisture, queue_size=10)   
         super(LoRaGateWay, self).__init__(verbose)
         self.set_mode(MODE.SLEEP)
         self.set_dio_mapping([0,0,0,0,0,0])    # RX
@@ -47,11 +47,11 @@ class LoRaGateWay(LoRa):
         payload = self.read_payload(nocheck=True)
         data = ''.join([chr(c) for c in payload])
         info = data.split(",")
-        
         moisture_temp = moisture()
 #         for i in node_list:
         try:
             if(len(info)==2):  
+                # print(info)
                 moisture_temp.ID = int(info[0]) 
                 moisture_temp.data = float(info[1]) 
                 self.pubb.publish(moisture_temp)
@@ -80,10 +80,15 @@ class LoRaGateWay(LoRa):
             #         sys.exit()
 
 lora = LoRaGateWay(verbose=False)
-args = parser.parse_args(lora)
+# args = parser.parse_args(lora)
 lora.set_mode(MODE.STDBY)
 lora.set_pa_config(pa_select=1)
-
+lora.set_freq(434.0)
+lora.set_preamble(8)
+lora.set_spreading_factor(7)
+lora.set_bw(7)
+lora.set_coding_rate(1)
+lora.set_ocp_trim(100)
 try:
     signal.signal(signal.SIGINT, quit)                                
     signal.signal(signal.SIGTERM, quit)

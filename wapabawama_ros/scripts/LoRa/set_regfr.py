@@ -23,7 +23,7 @@ def get_freq():
     f = lsb + 256*(mid + 256*msb)
     return f / 16384.
 
-set_freq(433)
+set_freq(434)
 print(get_freq())
 
 spi.close()

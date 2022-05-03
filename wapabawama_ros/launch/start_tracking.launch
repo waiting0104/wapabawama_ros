@@ -11,9 +11,9 @@
   <arg name="watering_mode"         default="3" />  
   <arg name="bias"         default="3" /> 
   <arg name="set_gantry_speed"         default="0.3" /> 
-  <arg name="moisture_x"         default="[0.3,0.4,0.7]" /> 
-  <arg name="moisture_y"         default="[0.1,0.89,0.2]" /> 
-  <arg name="amount_level"         default="[90,75,60,45,30]" />
+  <arg name="moisture_x"         default="[0.3,-0.06,-0.06]" /> 
+  <arg name="moisture_y"         default="[0.1,1.03,0.345]" /> 
+  <arg name="amount_level"         default="[90,60,30]" />
   <include file="$(find wapabawama_ros)/launch/detect.launch">
   </include>
   <include file="$(find wapabawama_ros)/launch/tf.launch"/>
@@ -33,8 +33,12 @@
         <param name="tracked_bbox" value="/right_camera/tracked_boxes" />
         <param name="window_name" value="right_window" />
     </node>
+
+    <node name="Lora" pkg="wapabawama_ros" type="Lora_recieve.py" output="screen">
+    </node>
+    
     <!-- Detect Lgv -->
-    <node name="lgv_detector_left" pkg="wapabawama_ros" type="lgv_detector_test" output="screen">
+    <node name="lgv_detector_left" pkg="wapabawama_ros" type="lgv_detector" output="screen">
       <param name="image" value="/stereo/left/image_raw" />
       <param name="bbox" value="/left_camera/tracked_boxes" />
       <param name="pub_lgvs_topic" value="/left/lgvs_tracked" />
@@ -46,7 +50,7 @@
       <param name="d" value="340" />
       <param name="box_expand" value="30" />
     </node>
-    <node name="lgv_detector_right" pkg="wapabawama_ros" type="lgv_detector_test" output="screen">
+    <node name="lgv_detector_right" pkg="wapabawama_ros" type="lgv_detector" output="screen">
       <param name="image" value="/stereo/right/image_raw" />
       <param name="bbox" value="/right_camera/tracked_boxes" />
       <param name="pub_lgvs_topic" value="/right/lgvs_tracked" />
@@ -147,7 +151,7 @@
       <param name="watering_mode" value="$(arg watering_mode)"/>
       <param name="pwm_name"         value="valve2/pwm"/>
       <param name="stop_sec"         value="$(arg stop_sec)"/>
-      <param name="bias"         value="0.029"/>   
+      <param name="bias"         value="0.027"/>   
       <param name="center_x"         value="0.25"/>
       <param name="set_pwm"            value="$(arg set_valve_pwm)"/>
       <param name="set_gantry_speed"            value="$(arg set_gantry_speed)"/>
@@ -163,14 +167,14 @@
       <param name="frame_name" value="la3"/>
       <param name="watering_mode" value="$(arg watering_mode)"/>
       <param name="stop_sec"         value="$(arg stop_sec)"/>
-      <param name="bias"         value="0.02"/>   
+      <param name="bias"         value="0.022"/>   
       <param name="pwm_name"         value="valve3/pwm"/>
       <param name="center_x"         value="-0.22"/>
       <param name="set_pwm"            value="$(arg set_valve_pwm)"/> 
       <param name="set_gantry_speed"            value="$(arg set_gantry_speed)"/>   
       <param name="start_water_range" value="$(arg start_water_range)"/>
       <param name="finish_water_range" value="$(arg finish_water_range)"/>
-      <rosparam param="amount_list">[0,3.4,13.8,30.2,45.2,56.2,63.2,71.8,79.2,90,98.2]</rosparam>
+      <rosparam param="amount_list">[0,3.4,14,29,41,50,64,74,84,90,95]</rosparam>
       <rosparam param="moisture_x" subst_value="True">$(arg moisture_x)</rosparam>
       <rosparam param="moisture_y" subst_value="True">$(arg moisture_y)</rosparam>
       <rosparam param="amount_level" subst_value="True">$(arg amount_level)</rosparam>
@@ -191,5 +195,5 @@
 
   </group>
 
-  <!-- <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find wapabawama_ros)/resources/rviz2.rviz" /> -->
+  <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find wapabawama_ros)/resources/rviz2.rviz" />
 </launch>

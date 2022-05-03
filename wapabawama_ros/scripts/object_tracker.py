@@ -12,7 +12,8 @@ from collections import OrderedDict
 import sys
 # construct the argument parse and parse the arguments
 class CentroidTracker():
-    def __init__(self, maxDisappeared=1):
+
+    def __init__(self, maxDisappeared=3):
         # initialize the next unique object ID along with two ordered
         # dictionaries used to keep track of mapping a given object
         # ID to its centroid and number of consecutive frames it has
@@ -126,7 +127,7 @@ class CentroidTracker():
             # goal will be to match an input centroid to an existing
             # object centroid
             D = dist.cdist(np.array(objectCentroids), inputCentroids)
-
+            print(D)
             # in order to perform this matching we must (1) find the
             # smallest value in each row and then (2) sort the row
             # indexes based on their minimum values so that the row
@@ -153,7 +154,8 @@ class CentroidTracker():
                 # val
                 if row in usedRows or col in usedCols:
                     continue
-
+                if D[row,col]>150:
+                    continue
                 # otherwise, grab the object ID for the current row,
                 # set its new centroid, and reset the disappeared
                 # counter

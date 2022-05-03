@@ -21,10 +21,6 @@ watering_mode : 1 is keep watering mode
                 3 is stop moving when detecting orchids
                 4 is stop action
                 */
-struct point{
-    float x;
-    float y;
-};
 class Valve
 {
     ros::NodeHandle nh_;
@@ -83,7 +79,7 @@ public:
         valve_pwm_pub = nh_.advertise<std_msgs::Int8>(pwm_name, 10);
         gantry_speed_pub = nh_.advertise<std_msgs::Float32>(gantry_speed_name, 10);
         lgvs_sub = nh_.subscribe("lgvs_record", 10, &Valve::lgvsCallback, this);
-        moisture_sub = nh_.subscribe("moisture", 10, &Valve::moistureCallback, this);
+        moisture_sub = nh_.subscribe("/moisture", 10, &Valve::moistureCallback, this);
     }
     ~Valve(){
         close();
@@ -94,7 +90,11 @@ public:
         lgvs_record = * msg;
     }
     void moistureCallback(const wapabawama_ros::moisture::ConstPtr &msg){
-        moisture_map[msg->ID] = msg->data;
+        if(moisture_map[msg->ID]==0){
+            moisture_map[msg->ID] = msg->data;
+        }
+        
+        std::cout<<"ID:"<<msg->ID<<std::endl<<"moisture:"<<msg->data<<std::endl<<"Position:("<<moisture_x[msg->ID]<<","<<moisture_y[msg->ID]<<")"<<std::endl;
     }
     //open valve
     void open(int pwm){
@@ -111,12 +111,12 @@ public:
         gantry_speed_pub.publish(gantry_speed);
     }
     //stop gantry and watering for t sec
-    void stop(int amount){
+    void stop(int duty){
         std::cout << "stop!" << std::endl;
         stop_state=1;
         stop_gantry();
-
-        open(set_pwm);
+        
+        open(duty);
         ini_stopping_time = ros::Time::now();
         while (1)
         {   
@@ -133,7 +133,8 @@ public:
         }        
     }
     void testing(int t){
-        open(set_pwm);
+        int a =  amount_to_duty_stop(78);
+        open(a);
         ini_stopping_time = ros::Time::now();
         while (1)
         {   
@@ -149,7 +150,7 @@ public:
             }
         }        
     }
-    int amount_to_duty_stop(int amount){
+    int amount_to_duty_stop(int amount){ // calc the duty cylce by the specific amount (open for 2 sec)
         int duty ;
         for(int i=0 ;i<11;i++){
             if(amount_list[i]<amount && amount_list[i+1]>=amount){
@@ -157,7 +158,7 @@ public:
                 break;
             }
         }
-        std::cout<<frame_name<<":"<<duty<<std::endl;
+        // std::cout<<frame_name<<":"<<duty<<std::endl;
         return duty;
     }
     int amount_to_duty_moving(float velocity,int amount, float radius, float angle){
@@ -172,8 +173,8 @@ public:
         }
         return duty;
     }
-    float get_moisture(std::unordered_map<int,float> moisture , geometry_msgs::Pose lgv){
-        float min_distance = 2000;
+    float get_moisture(std::unordered_map<int,float> moisture , geometry_msgs::Pose lgv){ //find the nearest moisture sensor
+        float min_distance = 200;
         int temp;
         for (auto &moisture : moisture_map){
             float distance =  pow((moisture_x[moisture.first]-lgv.position.x),2)+pow((moisture_y[moisture.first]-lgv.position.y),2);
@@ -184,27 +185,21 @@ public:
         }
         return moisture_map[temp];
     }
-    int amount_by_moisture(float moisture){
-        if(moisture<=20){
+    int amount_by_moisture(float moisture){ //assign the proper amount to specific moisture level
+        if(moisture<=33){
             return amount_level[0];
         }
-        else if (moisture>20&&moisture<=40){
+        else if (moisture>33&&moisture<=67){
             return amount_level[1];
         }
-        else if (moisture>40&&moisture<=60){
+        else if (moisture>67&&moisture<=100){
             return amount_level[2];
-        }
-        else if (moisture>60&&moisture<=80){
-            return amount_level[3];
-        }
-        else if (moisture>80){
-            return amount_level[4];
         }
     }
 
     void loop()
     {   
-     
+         
         geometry_msgs::TransformStamped transformStamped;
         try
         {
@@ -222,6 +217,7 @@ public:
         for (auto &lgv : lgvs_record.poses)
         {
             // std::cout<<"lgv.pose.position.y - start_water_range:"<<lgv.pose.position.y - start_water_range<<std::endl;
+            // std::cout<<"lgv.pose.position.y + finish_water_range:"<<lgv.pose.position.y + finish_water_range<<std::endl;
             // std::cout<<"lgv.pose.position.y + finish_water_range:"<<lgv.pose.position.y + finish_water_range<<std::endl;
             if (abs(lgv.position.x - center_x) < lgv_dist_range)
             {
@@ -249,13 +245,14 @@ public:
                         valve_pwm.data = 0;
                     break;
                 case 3:
-                    
+                       
                     // std::cout << frame_name<<":lgv.position.y:" << round(abs(10000*(la_y-lgv.position.y-bias)))<< std::endl;
 
                     if (round(abs(10000*(la_y-lgv.position.y-bias)))<=20 && stop_state == 0 ) // if gantry is on top of orchid , stop for 3 sec to water
-                    {   
-                        int amount = amount_by_moisture(get_moisture(moisture_map,lgv));
-                        stop(amount);
+                    {   int moisture = get_moisture(moisture_map,lgv);
+                        int amount = amount_by_moisture(moisture);
+                        int duty = amount_to_duty_stop(amount);
+                        stop(duty);
                     }
                     if (stop_state<=30&&stop_state!=0){
                         stop_state++;
@@ -285,7 +282,7 @@ int main(int argc, char **argv)
     ros::Time current_time, ini_time;
     ini_time = ros::Time::now();
     ros::Duration(2).sleep();
-    // vl.testing(vl.stop_sec);
+    // vl.testing(2);
     // vl.open(vl.set_pwm);
     
     while (ros::ok())
@@ -295,7 +292,7 @@ int main(int argc, char **argv)
         // int dt = (current_time - ini_time).toSec();
         // if (dt %13 == 0)
         // {
-        //     vl.testing(vl.stop_sec);
+        //     vl.testing(2);
         // }
         
 

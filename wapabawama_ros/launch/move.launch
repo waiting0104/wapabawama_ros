@@ -2,8 +2,7 @@
 
   <!-- Pabawama_ros -->
   <!-- Set Map Frame -->
-  <include file="$(find wapabawama_ros)/launch/tf.launch"/>
-
+  <include file="$(find wapabawama_ros)/launch/tf.launch"/> 
   <node name="set_command" pkg="wapabawama_ros" type="set_command" output="screen">
     <param name="device_name" value="/dev/ttyTHS0" />
     <param name="baud_rate" value="115200" />

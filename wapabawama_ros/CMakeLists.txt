@@ -159,7 +159,6 @@ add_library(system
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(lgv_detector      src/lgv_detector.cpp src/lgv.cpp src/perspective.cpp)
-add_executable(lgv_detector_test src/lgv_detector_test.cpp src/lgv.cpp src/perspective.cpp)
 add_executable(lgv_detector_simu src/lgv_detector_simu.cpp src/lgv.cpp)
 add_executable(lgv_recorder      src/lgv_recorder.cpp)
 add_executable(path_planner      src/path_planner.cpp)
@@ -182,7 +181,6 @@ add_executable(record_place      src/record_place.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(lgv_detector      ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(lgv_detector_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(lgv_detector_simu ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(lgv_recorder      ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(path_planner      ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -199,7 +197,6 @@ add_dependencies(record_place      ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_
 # add_dependencies(pwm              ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 ## Specify libraries to link a library or executable target against
 target_link_libraries(lgv_detector      ${catkin_LIBRARIES})
-target_link_libraries(lgv_detector_test ${catkin_LIBRARIES})
 target_link_libraries(lgv_detector_simu ${catkin_LIBRARIES})
 target_link_libraries(lgv_recorder      ${catkin_LIBRARIES})
 target_link_libraries(follower          ${catkin_LIBRARIES})
@@ -221,12 +218,6 @@ target_link_libraries(record_place      ${catkin_LIBRARIES})
 if(OpenCV_FOUND)
     target_include_directories(lgv_detector PUBLIC ${OpenCV_INCLUDE_DIRS})
     target_link_libraries(lgv_detector ${OpenCV_LIBS})
-    target_include_directories(lgv_detector_test PUBLIC ${OpenCV_INCLUDE_DIRS})
-    target_link_libraries(lgv_detector_test ${OpenCV_LIBS})
-
-
-  
-  
 endif()
 
 #############
