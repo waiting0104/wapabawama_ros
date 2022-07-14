@@ -79,7 +79,7 @@ class LgvDetector
   int box_y_limit;
   int box_expand;
   int xx;
-
+  int countt=0;
 public:
   LgvDetector() : it_(nh_),
                   tfListener(tfBuffer)
@@ -164,15 +164,25 @@ public:
       cv::Rect new_roi = lgv::expandSquBox(roi, cv_ptr->image, box_expand);
       cv::Mat select_box = cv_ptr->image(new_roi);
       lgv::Lgvector lgv_ = lgv::fixsample_fit(select_box, lgv::cfn_ratio);
+
       /* float cx = ( lgv_.x + 1.5 * bbox_xmin + 0.5 * bbox_xmax ) / 2; */
       /* float cy = ( lgv_.y + 1.5 * bbox_ymin + 0.5 * bbox_ymax ) / 2; */
       float cx = (lgv_.x + new_roi.width / 2) / 2 + new_roi.x;
       float cy = (lgv_.y + new_roi.height / 2) / 2 + new_roi.y;
       float vx = lgv_.dx;
       float vy = lgv_.dy;
-      if (cy >= 200 && cy <= 1000)
+      int vec_size = 100;
+      
+      // std::cout<<"-==jpg"<<std::endl;
+      if (cy >= 200 && cy <= 900)
       {
         // Perspective to map frame
+        cv::rectangle(cv_ptr->image, new_roi, cv::Scalar(0, 0, 255), 3);
+        auto p1 = cv::Point(cx + vx * vec_size, cy + vy * vec_size);
+        auto p2 = cv::Point(cx - vx * vec_size, cy - vy * vec_size);
+        cv::line(cv_ptr->image, p1, p2, cv::Scalar(0, 0, 200), 3, 4);
+        cv::putText(cv_ptr->image, std::to_string(box.id), cv::Point(box.xmin - 10, box.ymin - 10),
+                    cv::FONT_HERSHEY_COMPLEX, 3, cv::Scalar(255, 255, 60), 2);
         cv::Point2d tf_vec = tf_persp_vec_v2(cv::Point2d(vx, vy));
         cv::Point2d tf_cen = tf_persp_v2(cv::Point2d(cx, cy), _alpha / _beta, orig_cx, orig_cy, d);
         // std::cout<<tf_cen.x<<std::endl;
@@ -193,21 +203,25 @@ public:
         lgv_msg_tracked.count = box.count;
         // Push data here
         lgvs_tracked.lgvs.push_back(lgv_msg_tracked);
+        
       }
     }
-
+    
     lgvs_tracked.header.stamp = ros::Time::now();
     lgvs_tracked.header.frame_id = "map";
     lgv_pub_tracked.publish(lgvs_tracked);
+    
+    // cv::imwrite("/home/nvidia/Documents/mota/"+std::to_string(countt++)+".jpg", cv_ptr->image);
+    // cv::waitKey(3);
 #ifdef CV_SHOW
-    int vec_size = 100;
+    // int vec_size = 100;
     cv::rectangle(cv_ptr->image, new_roi, cv::Scalar(0, 0, 255), 3);
     auto p1 = cv::Point(cx + vx * vec_size, cy + vy * vec_size);
     auto p2 = cv::Point(cx - vx * vec_size, cy - vy * vec_size);
 
-    cv::line(cv_ptr->image, p1, p2, cv::Scalar(0, 0, 200), 3, 4);
-    cv::imshow(OPENCV_WINDOW, cv_ptr->image);
-    cv::waitKey(3);
+    // cv::line(cv_ptr->image, p1, p2, cv::Scalar(0, 0, 200), 3, 4);
+    // cv::imshow(OPENCV_WINDOW, cv_ptr->image);
+    // cv::waitKey(3);
 #endif // CV_SHOW
 
     // Output modified video stream

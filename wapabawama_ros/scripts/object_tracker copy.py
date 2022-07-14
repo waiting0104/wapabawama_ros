@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 # import the necessary packages
+from tkinter.tix import DisplayStyle
 import numpy as np
 from scipy.spatial import distance as dist
 import cv2
 import rospy
 from sensor_msgs.msg import Image
 from darknet_ros_msgs.msg import BoundingBoxes
-from darknet_ros_msgs.msg import BoundingBox
 from cv_bridge import CvBridge, CvBridgeError
 from collections import OrderedDict
 import sys
@@ -22,7 +22,7 @@ signal.signal(signal.SIGINT, signal_handler)
 # construct the argument parse and parse the arguments
 class CentroidTracker():
 
-    def __init__(self, maxDisappeared=5):
+    def __init__(self, maxDisappeared=3):
         # initialize the next unique object ID along with two ordered
         # dictionaries used to keep track of mapping a given object
         # ID to its centroid and number of consecutive frames it has
@@ -37,7 +37,6 @@ class CentroidTracker():
         self.nextObjectID = 0
         self.objects = OrderedDict()
         self.disappeared = OrderedDict()
-        self.count = OrderedDict()
         self.bbox_checkin = 0
         self.img_in = 0
         # store the number of maximum consecutive frames a given
@@ -77,7 +76,6 @@ class CentroidTracker():
         # ID to store the centroid
         self.objects[self.nextObjectID] = centroid
         self.disappeared[self.nextObjectID] = 0
-        self.count[self.nextObjectID] = 0
         self.nextObjectID += 1
 
     def deregister(self, objectID):
@@ -171,7 +169,7 @@ class CentroidTracker():
                 objectID = objectIDs[row]
                 self.objects[objectID] = inputCentroids[col]
                 self.disappeared[objectID] = 0
-                self.count[objectID] += 1
+
                 # indicate that we have examined each of the row and
                 # column indexes, respectively
                 usedRows.add(row)
@@ -207,19 +205,14 @@ class CentroidTracker():
                 for col in unusedCols:
                     self.register(inputCentroids[col])
         displays = OrderedDict()
-        for k,v in self.objects.items():
+        for k,v in self.objects:
             if self.disappeared[k]==0:
                displays[k]=v
         # return the set of trackable objects
-        return displays
+        return self.displays
 if __name__ == '__main__':
     # initialize our centroid tracker and frame dimensions
     ct = CentroidTracker()
-    init_r = BoundingBoxes()
-    for i in range(0,500):
-      x = BoundingBox()
-      x.id = i 
-      init_r.bounding_boxes.append(x)
     timecount = 0
     countt = 0
 
@@ -239,47 +232,34 @@ if __name__ == '__main__':
                 cycle_time1 = end - start  
 
                 cycle_time_sum =  cycle_time_sum +cycle_time1
-                # print(timecount)
-                # if timecount==10000:
-                # #   print(cycle_time_sum/timecount)
-                #   break
+                print(timecount)
+                if timecount==4000:
+                  print(cycle_time_sum/timecount)
                 timecount+=1
             else:
                 continue
             # # loop over the tracked objects
-            r = BoundingBoxes()
             for (objectID, centroid) in objects.items():
                 # draw both the ID of the object and the centroid of the
                 # object on the output frame
-                rb = BoundingBox()
-                rb.xmin = centroid[0]-130
-                rb.ymin = centroid[1]-130
-                rb.xmax = centroid[0]+130
-                rb.ymax = centroid[1]+130
-                rb.id = objectID
-                rb.count = ct.count[objectID]
-                rb.Class = 'tracked'
-                r.bounding_boxes.append(rb)
-                text = "ID {}".format(objectID+1)
+                text = "ID {}".format(objectID)
                 cv2.rectangle(ct.img, (centroid[0]-130,centroid[1]-130), (centroid[0]+130,centroid[1]+130), (255, 100, 0), 6)
                 cv2.putText(ct.img, text, (centroid[0] - 10, centroid[1] - 10),cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 5)
                 cv2.circle(ct.img, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
                 # print(text)
                
                 # print("start")
-            
+                
             # cv2.resizeWindow("right",1920/2,1080/2)
             # ct.image = ct.bridge.cv2_to_imgmsg(ct.img, "bgr8")
             # ct.image.header.stamp = rospy.Time.now()
             # ct.pubimage.publish(ct.image) 
             # # show the output frame
             # cv2.imshow("right", ct.img)
-            # cv2.waitKey(3) 
             countt+=1
             # if(countt<300):
-            #     cv2.imwrite('/home/nvidia/Documents/mota/cen0622_3/'+str(countt)+".jpg",ct.img)
-            r.header.stamp = rospy.Time.now()
-            ct.pubb.publish(r)
+            #     cv2.imwrite('/home/nvidia/Documents/mota/cen5/'+str(countt)+".jpg",ct.img)
+            # cv2.waitKey(10) 
             ct.rate.sleep()
             ct.bbox_checkin=0
 

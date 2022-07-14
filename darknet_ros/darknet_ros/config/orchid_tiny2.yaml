@@ -3,9 +3,9 @@ yolo_model:
   config_file:
     name: orchid_tiny.cfg
   weight_file:
-    name: orchid_tiny2.weights
+    name: yolov4-tiny_final_0511.weights
   threshold:
-    value: 0.7
+    value: 0.5
   detection_classes:
     names:
       - orchid

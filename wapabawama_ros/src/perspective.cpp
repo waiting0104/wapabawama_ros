@@ -50,5 +50,9 @@ cv::Point2d tf_persp_vec_v2(cv::Point2d src) {
         res.x = -src.x;
         res.y = -src.y;
     }
+    
+    // res.x =  src.x;
+    // res.y =  src.y;
+    
     return res;
 }

@@ -85,15 +85,15 @@ void set_gantryspeedCallback(const std_msgs::Float32::ConstPtr& msg) {
 }
 void set_valve1_pwmCallback(const std_msgs::Int8::ConstPtr& msg) {
   valve1_pwm = msg->data;
-  ROS_INFO("Valve1 pwm set to %d", valve1_pwm);
+  // ROS_INFO("Valve1 pwm set to %d", valve1_pwm);
 }
 void set_valve2_pwmCallback(const std_msgs::Int8::ConstPtr& msg) {
   valve2_pwm = msg->data;
-  ROS_INFO("Valve2 pwm set to %d", valve2_pwm);
+  // ROS_INFO("Valve2 pwm set to %d", valve2_pwm);
 }
 void set_valve3_pwmCallback(const std_msgs::Int8::ConstPtr& msg) {
   valve3_pwm = msg->data;
-  ROS_INFO("Valve3 pwm set to %d", valve3_pwm);
+  // ROS_INFO("Valve3 pwm set to %d", valve3_pwm);
 }
 int main(int argc, char **argv) {
   ros::init(argc, argv, "set_command");
@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
 #ifndef SIMULATION
   sys.init(dev_name,bdrate);
 #endif // SIMULATION
-
+  int a = 0 ;
   ros::NodeHandle n;
   ros::Subscriber set_gtsped_sub   = n.subscribe(sub_gantry_tpname, 10, &set_gantryspeedCallback);
   ros::Subscriber set_la1_pose_sub = n.subscribe(sub_la1_tpname, 10, &set_la1_poseCallback);
@@ -184,10 +184,15 @@ int main(int argc, char **argv) {
       la3_pos_.data = - sys.getMotorPos(2) / LA_RATIO;
       gantry_speed_fb = ( sys.getGantrySpd(0) + sys.getGantrySpd(1) ) / 2; // Rad/s
 #endif // REVERSE
+      if(gantry_speed_fb!=0 && a==0){
+        ini_time = ros::Time::now();
+        a=1;
+      }
       gantry_pos += gantry_speed_fb * dt / GANTRY_RATIO;
       gantry_pos_.data = gantry_pos;
-      gantry_speed_.data = gantry_speed_fb;
-
+      gantry_speed_.data = gantry_speed_fb/ GANTRY_RATIO;
+      // std::cout<<"1 : "<<gantry_speed_fb/ GANTRY_RATIO<<std::endl;
+      // std::cout<<"2 : "<<gantry_pos/(current_time-ini_time).toSec()<<std::endl;
       gantry_speed_pub.publish(gantry_speed_);
       gantry_pub.publish(gantry_pos_);
       la1_pub.publish(la1_pos_);

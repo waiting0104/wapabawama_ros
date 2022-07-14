@@ -3,14 +3,14 @@
   <arg name="path_integ"         default="0.1" />
   <arg name="effect_x_range"         default="0.12" />
   <arg name="effect_y_range"         default="0.08" />
-  <arg name="start_water_range"         default="0.15" />
-  <arg name="finish_water_range"         default="0.07" />
+  <arg name="start_water_range"         default="0.05" />
+  <arg name="finish_water_range"         default="-0.02" />
   <arg name="path_x_max"         default="0.2" />
-  <arg name="set_valve_pwm"         default="100" />
+  <arg name="set_valve_pwm"         default="60" />
   <arg name="stop_sec"         default="2" />
-  <arg name="watering_mode"         default="3" />  
+  <arg name="watering_mode"         default="2" />  
   <arg name="bias"         default="3" /> 
-  <arg name="set_gantry_speed"         default="0.3" /> 
+  <arg name="set_gantry_speed"         default="0.425" /> 
   <arg name="moisture_x"         default="[0.3,-0.06,-0.06]" /> 
   <arg name="moisture_y"         default="[0.1,1.03,0.345]" /> 
   <arg name="amount_level"         default="[90,60,30]" />
@@ -21,7 +21,7 @@
   <!-- wapabawama_ros -->
   <group ns="wapabawama_ros">
     <include file="$(find wapabawama_ros)/launch/move.launch"/>
-    <node name="SORT_left" pkg="wapabawama_ros" type="sort.py" output="screen">
+    <!-- <node name="SORT_left" pkg="wapabawama_ros" type="sort.py" output="screen">
         <param name="img_topic" value="/stereo/left/image_raw" />
         <param name="bbox" value="/left_camera/darknet_ros/bounding_boxes" />
         <param name="tracked_bbox" value="/left_camera/tracked_boxes" />
@@ -32,10 +32,21 @@
         <param name="bbox" value="/right_camera/darknet_ros/bounding_boxes" />
         <param name="tracked_bbox" value="/right_camera/tracked_boxes" />
         <param name="window_name" value="right_window" />
+    </node> -->
+    <node name="centroid_left" pkg="wapabawama_ros" type="object_tracker.py" output="screen">
+        <param name="img_topic" value="/stereo/left/image_raw" />
+        <param name="bbox" value="/left_camera/darknet_ros/bounding_boxes" />
+        <param name="tracked_bbox" value="/left_camera/tracked_boxes" />
+        <param name="window_name" value="left_window" />
     </node>
-
-    <node name="Lora" pkg="wapabawama_ros" type="Lora_recieve.py" output="screen">
+    <node name="centroid_right" pkg="wapabawama_ros" type="object_tracker.py" output="screen">
+        <param name="img_topic" value="/stereo/right/image_raw" />
+        <param name="bbox" value="/right_camera/darknet_ros/bounding_boxes" />
+        <param name="tracked_bbox" value="/right_camera/tracked_boxes" />
+        <param name="window_name" value="right_window" />
     </node>
+    <!-- <node name="Lora" pkg="wapabawama_ros" type="Lora_recieve.py" output="screen">
+    </node> -->
     
     <!-- Detect Lgv -->
     <node name="lgv_detector_left" pkg="wapabawama_ros" type="lgv_detector" output="screen">
@@ -43,9 +54,9 @@
       <param name="bbox" value="/left_camera/tracked_boxes" />
       <param name="pub_lgvs_topic" value="/left/lgvs_tracked" />
       <param name="pub_img_topic" value="/left/pose_img" />
-      <param name="alpha" value="206" />
+      <param name="alpha" value="203" />
       <param name="beta" value="1000" />
-      <param name="cx" value="1685" />
+      <param name="cx" value="1727" />
       <param name="cy" value="425" />
       <param name="d" value="340" />
       <param name="box_expand" value="30" />
@@ -66,8 +77,10 @@
     <!-- Record Lgvs -->
     <node name="lgv_recorder" pkg="wapabawama_ros" type="lgv_recorder" output="screen">
       <param name="pub_lgvs_topic" value="lgvs_record" />
-      <param name="left_record_limit" value="0.0187 " />
-      <param name="right_record_limit" value="0.011" />
+      <param name="left_record_limit" value="0.0085" />
+      <param name="right_record_limit" value="0.037" />
+      <!-- <param name="left_record_limit" value="-0.000812 " />
+      <param name="right_record_limit" value="0.001442" /> -->
     </node>
     <node name="follower_la1" pkg="wapabawama_ros" type="follower" output="screen">
       <param name="path_sub_name" value="la1/path"/>
@@ -133,17 +146,16 @@
       <param name="watering_mode" value="$(arg watering_mode)"/>
       <param name="pwm_name"         value="valve1/pwm"/>
       <param name="stop_sec"         value="$(arg stop_sec)"/>
-      <param name="bias"         value="0.034"/>   
+      <param name="bias"         value="0.016"/>   
       <param name="center_x"         value="0.01"/>
       <param name="set_pwm"            value="$(arg set_valve_pwm)"/>
       <param name="set_gantry_speed"            value="$(arg set_gantry_speed)"/>
       <param name="start_water_range" value="$(arg start_water_range)"/>
       <param name="finish_water_range" value="$(arg finish_water_range)"/>
-      <rosparam param="amount_list">[0,4,17.2,31.2,42.6,55.2,66.8,72.8,80.4,89.8,101.2]</rosparam>
+      <rosparam param="amount_list">[0,4.584,17.2,31.134,43.058,55.714,68.522,74.798,82.774,93.814,103.11]</rosparam>
       <rosparam param="moisture_x" subst_value="True">$(arg moisture_x)</rosparam>
       <rosparam param="moisture_y" subst_value="True">$(arg moisture_y)</rosparam>
       <rosparam param="amount_level" subst_value="True">$(arg amount_level)</rosparam>
-      
     </node>
     <node name="watering_vl2" pkg="wapabawama_ros" type="watering" output="screen">
       <param name="path_name"        value="la2/path"/>
@@ -151,13 +163,13 @@
       <param name="watering_mode" value="$(arg watering_mode)"/>
       <param name="pwm_name"         value="valve2/pwm"/>
       <param name="stop_sec"         value="$(arg stop_sec)"/>
-      <param name="bias"         value="0.027"/>   
+      <param name="bias"         value="0.024"/>   
       <param name="center_x"         value="0.25"/>
       <param name="set_pwm"            value="$(arg set_valve_pwm)"/>
       <param name="set_gantry_speed"            value="$(arg set_gantry_speed)"/>
       <param name="start_water_range" value="$(arg start_water_range)"/>
       <param name="finish_water_range" value="$(arg finish_water_range)"/> 
-      <rosparam param="amount_list">[0,3,18.2,28.6,49.2,53.2,62.8,75,80.8,92.4,101]</rosparam>
+      <rosparam param="amount_list">[0,10,22.8,35.8,48,62.6,72.2,83,92,99.6,106.6]</rosparam>
       <rosparam param="moisture_x" subst_value="True">$(arg moisture_x)</rosparam>
       <rosparam param="moisture_y" subst_value="True">$(arg moisture_y)</rosparam>
       <rosparam param="amount_level" subst_value="True">$(arg amount_level)</rosparam>
@@ -167,14 +179,14 @@
       <param name="frame_name" value="la3"/>
       <param name="watering_mode" value="$(arg watering_mode)"/>
       <param name="stop_sec"         value="$(arg stop_sec)"/>
-      <param name="bias"         value="0.022"/>   
+      <param name="bias"         value="0.014"/>   
       <param name="pwm_name"         value="valve3/pwm"/>
       <param name="center_x"         value="-0.22"/>
       <param name="set_pwm"            value="$(arg set_valve_pwm)"/> 
       <param name="set_gantry_speed"            value="$(arg set_gantry_speed)"/>   
       <param name="start_water_range" value="$(arg start_water_range)"/>
       <param name="finish_water_range" value="$(arg finish_water_range)"/>
-      <rosparam param="amount_list">[0,3.4,14,29,41,50,64,74,84,90,95]</rosparam>
+      <rosparam param="amount_list">[0,1.184,12.71,26.124,36.546,49.296,59.41,70.952,79.852,91.22,95.444]</rosparam>
       <rosparam param="moisture_x" subst_value="True">$(arg moisture_x)</rosparam>
       <rosparam param="moisture_y" subst_value="True">$(arg moisture_y)</rosparam>
       <rosparam param="amount_level" subst_value="True">$(arg amount_level)</rosparam>

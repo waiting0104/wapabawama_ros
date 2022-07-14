@@ -47,14 +47,23 @@ void left_lgvs_Callback(const wapabawama_ros::lgvs::ConstPtr &msg)
                     auto q_new = lgv.pose.orientation;
                     float angle_old = atan2(2 * (q_old.w * q_old.z), q_old.w * q_old.w - q_old.z * q_old.z);
                     float angle_new = atan2(2 * (q_new.w * q_new.z), q_new.w * q_new.w - q_new.z * q_new.z);
-                    if (abs(angle_new - angle_old) < 2.5)
+                    if (abs(angle_new - angle_old) < M_PI/2)
                     {
                         angle_old = (angle_old * (n - 1) + angle_new) / n;
+                        
                     }
-                    else
-                    {
-                        angle_old = angle_new;
+                    else 
+                    {   
+                        angle_old = angle_new;    
+                        // angle_old = (angle_old * (n - 1) + angle_new - M_PI) / n;
+                        // if(angle_old<0)
+                        //     angle_old+=M_PI;
+
                     }   
+                    tf2::Quaternion quat_tf2;
+                    quat_tf2.setRPY(0, 0, angle_old);
+                    quat_tf2.normalize();
+                    lgvs_map_left[lgv.ID].orientation = tf2::toMsg(quat_tf2);
                 }
             }
             else
@@ -87,14 +96,25 @@ void right_lgvs_Callback(const wapabawama_ros::lgvs::ConstPtr &msg)
                     auto q_new = lgv.pose.orientation;
                     float angle_old = atan2(2 * (q_old.w * q_old.z), q_old.w * q_old.w - q_old.z * q_old.z);
                     float angle_new = atan2(2 * (q_new.w * q_new.z), q_new.w * q_new.w - q_new.z * q_new.z);
-                    if (abs(angle_new - angle_old) < 2.5)
+                    
+                    if (abs(angle_new - angle_old) < M_PI/2)
                     {
-                        angle_old = (angle_old * (n - 1) + angle_new) / n;
+                        angle_old = (angle_old * (n - 1) + angle_new ) / n;
+                      
                     }
-                    else
-                    {
-                        angle_old = angle_new;
+                    else 
+                    {   
+                        angle_old = angle_new;    
+                        // angle_old = (angle_old * (n - 1) + angle_new - M_PI) / n;
+                        // if(angle_old<0)
+                        //     angle_old+=M_PI;
+
                     }   
+                    // std::cout<<angle_old<<std::endl;
+                    tf2::Quaternion quat_tf2;
+                    quat_tf2.setRPY(0, 0, angle_old);
+                    quat_tf2.normalize();
+                    lgvs_map_right[lgv.ID].orientation = tf2::toMsg(quat_tf2);
                 }
             }
             else
@@ -117,7 +137,7 @@ int main(int argc, char **argv)
     ros::Subscriber lgvs_subl = n.subscribe("/left/lgvs_tracked", 10, &left_lgvs_Callback);
     ros::Subscriber lgvs_subr = n.subscribe("/right/lgvs_tracked", 10, &right_lgvs_Callback);
     ros::Publisher lgvs_pub = n.advertise<geometry_msgs::PoseArray>(pub_lgvs_topic, 10);
-    ros::Rate loop_rate(15);
+    ros::Rate loop_rate(10);
     ros::Time current_time, ini_time;
     ini_time = ros::Time::now();
     while (ros::ok())

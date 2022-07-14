@@ -15,15 +15,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 from __future__ import print_function
-from itertools import cycle
-
 from mimetypes import init
 
 import numpy as np
 import cv2
 from skimage import io
 
-import timeit
+import time
 import argparse
 from filterpy.kalman import KalmanFilter
 
@@ -32,7 +30,7 @@ from darknet_ros_msgs.msg import BoundingBoxes
 from darknet_ros_msgs.msg import BoundingBox
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
-import message_filters
+
 import sys
 import signal
 def signal_handler(signal, frame): # ctrl + c -> exit program
@@ -224,19 +222,17 @@ class Sort(object):
     max_age = rospy.get_param("~max_age", max_age)
     min_hits = rospy.get_param("~min_hits", min_hits)
     self.iou_threshold = rospy.get_param("~iou_threshold", 0.3)
-    # self.subb = rospy.Subscriber(bbox_topic, BoundingBoxes, self.boxcallback)
-    self.subb = message_filters.Subscriber(bbox_topic,BoundingBoxes)
+    self.subb = rospy.Subscriber(bbox_topic, BoundingBoxes, self.boxcallback)
     self.pubb = rospy.Publisher(tracked_bbox_topic, BoundingBoxes, queue_size=50)
     self.rate = rospy.Rate(10)
     if display:
         img_topic = rospy.get_param('~img_topic', '/camera/image_raw')
         self.window_name = rospy.get_param('~window_name', 'image')
         self.display = display
-        # self.subimage = rospy.Subscriber(img_topic, Image, self.imgcallback)
-        self.subimage = message_filters.Subscriber(img_topic,Image)
+        self.subimage = rospy.Subscriber(img_topic, Image, self.imgcallback)
         self.pubimage = rospy.Publisher('tracked_image', Image, queue_size=20)
-    sync = message_filters.ApproximateTimeSynchronizer([self.subb,self.subimage],queue_size=10,slop=0.5,allow_headerless=True)
-    sync.registerCallback(self.callback)
+        
+
     """
     Sets key parameters for SORT
     """
@@ -250,22 +246,27 @@ class Sort(object):
     self.bbox_checkin = 0
     self.bridge = CvBridge()
 
-  def callback(self,Boundingboxes,Image):
+
+  def imgcallback(self, msg):
+    
     if self.display:
         try : 
-            self.img = self.bridge.imgmsg_to_cv2(Image, "bgr8")
+            self.img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+            # cv2.imshow("right", self.img)
+            # cv2.waitKey(3) 
         except CvBridgeError as e:
             pass
     self.img_in = 1
+    return
+  def boxcallback(self, msg):
     dets = []
-    for i in range(len(Boundingboxes.bounding_boxes)):
-        bbox = Boundingboxes.bounding_boxes[i]
+    for i in range(len(msg.bounding_boxes)):
+        bbox = msg.bounding_boxes[i]
         dets.append(np.array([bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax, bbox.probability]))
         
     self.dets = np.array(dets)
     self.bbox_checkin=1
     return
-  
 
   def update(self, dets=np.empty((0, 6))):
     """
@@ -324,89 +325,76 @@ if __name__ == '__main__':
     np.random.seed(8)
     countt=0
     colours = np.random.rand(31, 3) #used only for display
-    mot_tracker = Sort(max_age=200, min_hits=5) #create instance of the SORT tracker
+    mot_tracker = Sort(max_age=200, min_hits=3) #create instance of the SORT tracker
     count = 0 
     init_r = BoundingBoxes()
     for i in range(0,500):
       x = BoundingBox()
       x.id = i 
       init_r.bounding_boxes.append(x)
-    timecount=1
-    cycle_time_sum = 0
     # for element in init_r.bounding_boxes:
     #   if element.id==3:
     #     print(element.id)
-    # cv2.namedWindow(mot_tracker.window_name,0)
     while True:
         try:
-          
-            start = timeit.default_timer()
+            start_time = time.time()
             if mot_tracker.bbox_checkin==1:
                 trackers = mot_tracker.update(mot_tracker.dets)
-                end = timeit.default_timer()
-                cycle_time1 = end - start  
-
-                # cycle_time_sum =  cycle_time_sum +cycle_time1
-                # print(timecount)
-                # if timecount==4000:
-                #   print(cycle_time_sum/timecount)
-                #   break
-                timecount+=1
-                r = BoundingBoxes()
-                # print(trackers)
-                for d in range(len(trackers)):
-                    rb = BoundingBox()
-                    rb.probability=1
-                    rb.xmin = int(trackers[d,0])
-                    rb.ymin = int(trackers[d,1])
-                    rb.xmax = int(trackers[d,2])
-                    rb.ymax = int(trackers[d,3])
-                    rb.id = int(trackers[d,4])
-                    rb.count = int(trackers[d,5])
-                    # print("id=",rb.id,"count:",rb.count) 
-                    if rb.id>count:
-                      count = rb.id
-                    rb.Class = 'tracked'
-                    r.bounding_boxes.append(rb)
-                    # print("trackers :",rb)
-                    res = trackers[d].astype(np.int32)
-                    rgb=colours[res[4]%31,:]*255
-                    cv2.rectangle(mot_tracker.img, (res[0],res[1]), (res[2],res[3]), (rgb[0],rgb[1],rgb[2]), 6)
-                    cv2.putText(mot_tracker.img, "ID : %d"%(res[4]), (res[0],res[1]), cv2.FONT_HERSHEY_COMPLEX, 2, (0 ,0 ,255), 5)
-                        # print(mot_tracker.dets)
-                
-                if mot_tracker.img_in==1 and mot_tracker.bbox_checkin==1 and mot_tracker.display:
-                    try : 
-                        # print("start")
-                        
-                        # cv2.resizeWindow(mot_tracker.window_name,1920/2,1080/2)
-                        # cv2.imshow(mot_tracker.window_name,mot_tracker.img)
-                        # cv2.putText(mot_tracker.img, "Orchid counts : %d"%count, (20,120), cv2.FONT_HERSHEY_COMPLEX, 3.5, (114,228,120), 10)
-                        # cv2.waitKey(3)
-                        # # if(countt<300):
-                        #   countt += 1
-                        #   cv2.imwrite('/home/nvidia/Documents/mota/sort0622_3/'+str(countt)+".jpg",mot_tracker.img)
-                       
-
-                        
-                #         # mot_tracker.image = mot_tracker.bridge.cv2_to_imgmsg(mot_tracker.img, "bgr8")
-                #         # mot_tracker.image.header.stamp = rospy.Time.now()
-                #         # mot_tracker.pubimage.publish(mot_tracker.image)
-                        r.header.stamp = rospy.Time.now()
-                        mot_tracker.pubb.publish(r)
-                    except CvBridgeError as e:
-                        pass      
-
-              
-         
-                    
-                
-                mot_tracker.img_in = 0   
                 mot_tracker.bbox_checkin=0
-                
-             
-                mot_tracker.rate.sleep()
-               
+            else:
+                trackers = mot_tracker.update(np.empty((0,6)))
+
+            r = BoundingBoxes()
+            # print(trackers)
+            for d in range(len(trackers)):
+                rb = BoundingBox()
+                rb.probability=1
+                rb.xmin = int(trackers[d,0])
+                rb.ymin = int(trackers[d,1])
+                rb.xmax = int(trackers[d,2])
+                rb.ymax = int(trackers[d,3])
+                rb.id = int(trackers[d,4])
+                rb.count = int(trackers[d,5])
+                # print("id=",rb.id,"count:",rb.count) 
+                if rb.id>count:
+                  count = rb.id
+                rb.Class = 'tracked'
+                r.bounding_boxes.append(rb)
+                # print("trackers :",rb)
+
+                res = trackers[d].astype(np.int32)
+                rgb=colours[res[4]%31,:]*255
+                cv2.rectangle(mot_tracker.img, (res[0],res[1]), (res[0]+200,res[1]-50), (255,255,255), -1)
+                cv2.rectangle(mot_tracker.img, (res[0],res[1]), (res[2],res[3]), (rgb[0],rgb[1],rgb[2]), 6)
+                cv2.putText(mot_tracker.img, "ID : %d"%(res[4]), (res[0],res[1]), cv2.FONT_HERSHEY_COMPLEX, 2, (0 ,0 ,255), 5)
+                    # print(mot_tracker.dets)
+            
+            if mot_tracker.img_in==1 and mot_tracker.display:
+                try : 
+                    # print("start")
+                    cv2.namedWindow(mot_tracker.window_name,0)
+                    cv2.resizeWindow(mot_tracker.window_name,1920/2,1080/2)
+                    # cv2.imwrite('/home/nvidia/Documents/mota/sort/'+str(countt)+".jpg",mot_tracker.img)
+                    cv2.putText(mot_tracker.img, "Orchid counts : %d"%count, (20,120), cv2.FONT_HERSHEY_COMPLEX, 3.5, (114,228,120), 10)
+                    cv2.imshow(mot_tracker.window_name,mot_tracker.img)
+                    cv2.waitKey(30)
+            #         # mot_tracker.image = mot_tracker.bridge.cv2_to_imgmsg(mot_tracker.img, "bgr8")
+            #         # mot_tracker.image.header.stamp = rospy.Time.now()
+            #         # mot_tracker.pubimage.publish(mot_tracker.image)
+                    
+                except CvBridgeError as e:
+                    pass      
+
+            cycle_time = time.time() - start_time
+            if len(r.bounding_boxes)>0 and mot_tracker.img_in==1: #prevent empty box
+                countt += 1
+                # cv2.imwrite('/home/nvidia/Documents/mota/'+str(countt)+".jpg",mot_tracker.img)
+                r.header.stamp = rospy.Time.now()
+                mot_tracker.pubb.publish(r)
+            # print(cycle_time)
+            mot_tracker.img_in = 0   
+            mot_tracker.rate.sleep()
+            
         except (rospy.ROSInterruptException, SystemExit, KeyboardInterrupt):
             sys.exit(0)
 #        except:
